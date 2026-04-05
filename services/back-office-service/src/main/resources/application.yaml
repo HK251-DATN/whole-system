@@ -1,0 +1,59 @@
+spring:
+  application:
+    name: back_office_service
+
+  config:
+    import: optional:file:.env[.properties]
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/back_office_db?stringtype=unspecified
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+server:
+  port: 9100
+
+cloudflare:
+  r2:
+    account-id: ${R2_ACCOUNT_ID}
+    endpoint: https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com
+    access-key: ${R2_ACCESS_KEY}
+    secret-key: ${R2_SECRET_KEY}
+    region: auto
+
+app:
+  kafka-url:
+    ${KAFKA_HOST}:${KAFKA_PORT}
+  user-avatar-bucket:
+    back-office-user-avts
+  product-general-img-bucket:
+    product-general-img
+  user-avatar-public-bucket-url:
+    https://pub-954e99f131cf4cc896de1ad360338682.r2.dev
+  user-avatar-default-url:
+    https://pub-954e99f131cf4cc896de1ad360338682.r2.dev/128c271e-c0a6-433e-bcd1-f3bbc4243401-default-user-avt.png
+  product-general-image-public-bucket-url:
+    https://pub-0365edd1781141cdb68675969c7cdb87.r2.dev
+  product-general-img-default-url:
+    https://pub-0365edd1781141cdb68675969c7cdb87.r2.dev/5fe95e6c-c064-49c4-8712-1c8f54472502.jpg
+
+
+logging:
+  level:
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG
+    web: DEBUG
+

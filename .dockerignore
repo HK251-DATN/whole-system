@@ -1,0 +1,60 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+README.md
+CLAUDE.md
+DOCKER_SETUP.md
+
+# IDE
+.idea
+.vscode
+*.iml
+*.iws
+*.ipr
+.settings
+.project
+.classpath
+
+# Build artifacts
+target/
+build/
+dist/
+out/
+*.class
+
+# Logs
+*.log
+logs/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Maven
+.mvn/wrapper/maven-wrapper.jar
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Docker
+docker-compose.yml
+Dockerfile
+.dockerignore

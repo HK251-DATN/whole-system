@@ -1,0 +1,56 @@
+spring:
+  application:
+    name: ecommerce_service
+
+  config:
+    import: optional:file:.env[.properties]
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/ecommerce_db?stringtype=unspecified
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+#decorator:
+#  datasource:
+#    p6spy:
+#      enable-logging: true
+#      multiline: true
+#      logging: slf4j
+#      tracing:
+#        include-parameter-values: true
+
+logging:
+  level:
+    p6spy: INFO
+
+server:
+  port: 9301
+
+cloudflare:
+  r2:
+    account-id: ${R2_ACCOUNT_ID}
+    endpoint: https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com
+    access-key: ${R2_ACCESS_KEY}
+    secret-key: ${R2_SECRET_KEY}
+    region: auto
+
+app:
+  kafka-url:
+    ${KAFKA_HOST}:${KAFKA_PORT}
+  user-avater-bucket:
+    back-office-user-avts
+  product-general-img-bucket:
+    product-general-img
+  user-avatar-public-bucket-url:
+    ${USER_AVATAR_PUBLIC_BUCKET_URL}
