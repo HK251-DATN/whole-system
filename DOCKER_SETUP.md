@@ -364,9 +364,21 @@ docker-compose logs --since 30m identity-service
 
 ## Data Persistence
 
-**Persistent data is stored in Docker volumes:**
-- `postgres_data` - All database data
-- `kafka_data` - Kafka logs and topics
+**Persistent data is stored in Docker named volumes:**
+- `postgres_data` - All database data (critical - do not delete!)
+- `kafka_data` - Kafka logs and topics (managed by Docker)
+
+Both volumes are managed by Docker and stored in Docker's volume directory (not in your project folder).
+
+**View volumes:**
+```bash
+# List volumes
+docker volume ls | grep ecommerce
+
+# Inspect volume location
+docker volume inspect ecommerce-microservices-platform_postgres_data
+docker volume inspect ecommerce-microservices-platform_kafka_data
+```
 
 **To completely reset (WARNING: deletes all data):**
 ```bash
@@ -377,12 +389,22 @@ docker-compose down -v
 
 **Backup database:**
 ```bash
+# Using pg_dumpall
 docker-compose exec postgres pg_dumpall -U khoidev > backup.sql
+
+# Or backup the entire volume
+docker run --rm -v ecommerce-microservices-platform_postgres_data:/data \
+  -v $(pwd):/backup ubuntu tar czf /backup/postgres_backup.tar.gz /data
 ```
 
 **Restore database:**
 ```bash
+# From SQL dump
 docker-compose exec -T postgres psql -U khoidev < backup.sql
+
+# Or restore volume
+docker run --rm -v ecommerce-microservices-platform_postgres_data:/data \
+  -v $(pwd):/backup ubuntu tar xzf /backup/postgres_backup.tar.gz -C /data --strip-components=1
 ```
 
 ## Development Workflow

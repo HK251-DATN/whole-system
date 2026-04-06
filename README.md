@@ -1,6 +1,14 @@
 # E-Commerce Microservices Platform
 
+[![Java](https://img.shields.io/badge/Java-21%20%7C%2025-orange.svg)](https://openjdk.java.net/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.6%20%7C%204.0.x-brightgreen.svg)](https://spring.io/projects/spring-boot)
+[![Kafka](https://img.shields.io/badge/Apache%20Kafka-4.2.0-black.svg)](https://kafka.apache.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-blue.svg)](https://www.postgresql.org/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://www.docker.com/)
+
 A complete e-commerce platform built with microservices architecture, featuring user management, product catalog, inventory management, and order processing. Built with Spring Boot, Kafka, PostgreSQL, and Docker.
+
+**HCMUT Capstone Project** - Scalable event-driven e-commerce backend with clean architecture patterns.
 
 ## 🚀 Quick Start
 
@@ -10,22 +18,35 @@ A complete e-commerce platform built with microservices architecture, featuring 
 - (Optional) Java 21 & 25 for local development
 - (Optional) Maven for local builds
 
+### First Time Setup
+
+```bash
+# 1. Clone this project root repository
+git clone https://github.com/HK251-DATN/project-root.git
+cd project-root
+
+# 2. Run setup script to clone all service repositories
+./setup-repos.sh    # Linux/Mac
+setup-repos.bat     # Windows
+
+# This will create and populate:
+#   - services/ (4 microservice repos)
+#   - infrastructure/ (2 infrastructure repos)
+#   - frontend/ (2 frontend repos)
+```
+
 ### Start Everything with Docker
 
 ```bash
-# 1. Clone the repository
-git clone <repository-url>
-cd project-root
-
-# 2. Configure environment
+# 1. Configure environment
 cp .env.example .env
 # Edit .env and add your Cloudflare R2 credentials
 
-# 3. Build JARs locally (avoids Docker network issues)
+# 2. Build JARs locally (avoids Docker network issues)
 ./build-local.sh    # Linux/Mac
 build-local.bat     # Windows
 
-# 4. Start all services
+# 3. Start all services
 ./start.sh          # Linux/Mac
 start.bat           # Windows
 ```
@@ -78,17 +99,21 @@ Back-Office Service
 ## 🏗️ Project Structure
 
 ```
-project-root/
-├── services/
+ecommerce-microservices-platform/
+├── services/                     # Created by setup-repos.sh
 │   ├── identity-service/         # Port 9000, Spring Boot 4.0.1, Java 25
 │   ├── back-office-service/      # Port 9100, Spring Boot 4.0.2, Java 25
 │   ├── product_storage_service/  # Port 9200, Spring Boot 4.0.3, Java 25
 │   └── ecommerce-service/        # Port 9301, Spring Boot 3.5.6, Java 21
-├── infrastructure/
+├── infrastructure/               # Created by setup-repos.sh
 │   ├── database/                 # PostgreSQL multi-db setup
 │   └── kafka/                    # Kafka + Kafka UI
-├── frontend/                     # (Future)
+├── frontend/                     # Created by setup-repos.sh
+│   ├── ecommerce-ui/             # Customer-facing e-commerce app
+│   └── back-office-ui/           # Admin/back-office interface
 ├── docker-compose.yml            # Main orchestration
+├── setup-repos.sh/.bat           # First-time repository setup
+├── service.sh/.bat               # Individual service management
 ├── start.sh / start.bat          # Startup scripts
 └── .env.example                  # Environment template
 ```
@@ -205,6 +230,41 @@ See [DOCKER_SETUP.md](DOCKER_SETUP.md) for complete guide.
 # Clean everything
 ./start.sh clean
 ```
+
+### Development Workflow - Individual Service Management
+
+After editing code in a service, use the `service.sh` script to quickly rebuild and restart just that service:
+
+```bash
+# Rebuild and restart after code changes (recommended)
+./service.sh rebuild identity           # Apply changes to identity service
+./service.sh rebuild back-office        # Apply changes to back-office service
+./service.sh rebuild product-storage    # Apply changes to product storage
+./service.sh rebuild ecommerce          # Apply changes to ecommerce service
+
+# Other useful commands
+./service.sh logs identity              # View logs (follow mode)
+./service.sh restart identity           # Restart without rebuilding
+./service.sh stop identity              # Stop a service
+./service.sh start identity             # Start a service
+./service.sh status identity            # Show service status
+./service.sh exec identity              # Open bash inside container
+```
+
+**Common development workflow:**
+1. Edit code in `services/identity-service/`
+2. Run `./service.sh rebuild identity` to apply changes
+3. Run `./service.sh logs identity` to verify the service started correctly
+4. Test your changes
+
+**Available service aliases:**
+- `identity` → identity-service
+- `back-office` / `backoffice` → back-office-service
+- `product-storage` / `product` → product-storage-service
+- `ecommerce` → ecommerce-service
+- `postgres` / `db` → PostgreSQL database
+- `kafka` → Kafka broker
+- `kafka-ui` → Kafka UI
 
 ## 📝 Configuration
 
@@ -365,18 +425,51 @@ Docker Compose handles this automatically via health checks and dependencies.
 4. Test with Docker: `./start.sh rebuild`
 5. Submit pull request
 
+## 🌟 Features
+
+- ✅ **Microservices Architecture** - 4 independent services with clear separation of concerns
+- ✅ **Event-Driven Communication** - Apache Kafka for asynchronous messaging
+- ✅ **Clean Architecture** - Domain-driven design in ecommerce service
+- ✅ **Multi-Database Setup** - Isolated PostgreSQL databases per service
+- ✅ **Docker Ready** - One-command deployment with Docker Compose
+- ✅ **Cloudflare R2 Integration** - S3-compatible object storage for files
+- ✅ **Spring Security** - OAuth2 authentication and authorization
+- ✅ **Batch Processing** - Smart inventory management with unit conversion
+- ✅ **API Documentation** - RESTful APIs for all services
+
+## 🎯 Use Cases
+
+- User authentication and profile management
+- Product catalog with 3-tier category hierarchy
+- Warehouse and inventory tracking
+- Order processing and fulfillment
+- Real-time event synchronization across services
+
+## 📈 Scalability
+
+- **Horizontal scaling**: Each service can scale independently
+- **Event-driven**: Kafka enables loose coupling and async processing
+- **Database isolation**: No single point of failure
+- **Containerized**: Easy deployment to Kubernetes or cloud platforms
+
 ## 📄 License
 
-[Add your license here]
+This project is part of HCMUT Capstone Project. All rights reserved.
 
 ## 👥 Team
 
-HCMUT Capstone Project Team
+**Ho Chi Minh City University of Technology (HCMUT)**  
+Capstone Project Team - 2026
 
 ## 📞 Support
 
 For issues and questions:
-- Check [DOCKER_SETUP.md](DOCKER_SETUP.md) troubleshooting section
-- Review service logs: `./start.sh logs [service-name]`
-- Check Kafka UI: http://localhost:9280
-- Open an issue in the repository
+- 📖 Check [DOCKER_SETUP.md](DOCKER_SETUP.md) for setup help
+- 🐛 Check [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for common issues
+- 📋 Review service logs: `./start.sh logs [service-name]`
+- 🎛️ Monitor Kafka: http://localhost:9280
+- 💬 Open an issue on [GitHub](https://github.com/yourusername/ecommerce-microservices-platform/issues)
+
+---
+
+⭐ **Star this repository if you find it helpful!**

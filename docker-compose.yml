@@ -12,7 +12,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD:-khoicktv}
       POSTGRES_DB: postgres
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - "${DB_HOST_PORT:-5433}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -28,8 +28,9 @@ services:
   kafka:
     image: apache/kafka:4.2.0
     container_name: ecommerce_kafka
+    user: root
     volumes:
-      - ./infrastructure/kafka/kafka_data:/tmp/kraft-combined-logs
+      - kafka_data:/tmp/kraft-combined-logs
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
@@ -217,4 +218,6 @@ networks:
 
 volumes:
   postgres_data:
+    driver: local
+  kafka_data:
     driver: local

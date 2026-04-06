@@ -8,8 +8,10 @@ E-commerce platform built with microservices architecture, event-driven communic
 
 ## Repository Structure
 
+**Repository**: `ecommerce-microservices-platform`
+
 ```
-project-root/
+ecommerce-microservices-platform/
 ├── services/               # 4 microservices
 │   ├── identity-service/          # Port 9000 - User authentication & authorization
 │   ├── back-office-service/       # Port 9100 - Product & category management
