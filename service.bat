@@ -23,6 +23,9 @@ if "%SERVICE_INPUT%"=="" (
 REM Map service aliases to actual names
 call :map_service_name "%SERVICE_INPUT%"
 
+REM Detect docker-compose or docker compose
+call :check_docker_compose
+
 REM Execute command
 if "%COMMAND%"=="rebuild" goto :rebuild_service
 if "%COMMAND%"=="restart" goto :restart_service
@@ -86,28 +89,101 @@ if "%INPUT%"=="kafka-ui" set SERVICE=kafka-ui& exit /b
 set SERVICE=%INPUT%
 exit /b
 
+:check_docker_compose
+REM Check if docker-compose command exists
+where docker-compose >nul 2>&1
+if %errorlevel% equ 0 (
+    set DOCKER_COMPOSE_CMD=docker-compose
+    exit /b
+)
+REM Check if docker compose command exists
+docker compose version >nul 2>&1
+if %errorlevel% equ 0 (
+    set DOCKER_COMPOSE_CMD=docker compose
+    exit /b
+)
+REM Neither command found
+echo [ERROR] docker-compose is not installed
+exit /b 1
+
 :rebuild_service
-echo [INFO] Building %SERVICE%...
-docker-compose build --no-cache "%SERVICE%"
-if %errorlevel% neq 0 (
-    echo [ERROR] Build failed
+REM Check if service is a microservice
+set IS_MICROSERVICE=0
+if "%SERVICE%"=="identity-service" set IS_MICROSERVICE=1& set SERVICE_DIR=services\identity-service
+if "%SERVICE%"=="back-office-service" set IS_MICROSERVICE=1& set SERVICE_DIR=services\back-office-service
+if "%SERVICE%"=="product-storage-service" set IS_MICROSERVICE=1& set SERVICE_DIR=services\product_storage_service
+if "%SERVICE%"=="ecommerce-service" set IS_MICROSERVICE=1& set SERVICE_DIR=services\ecommerce-service
+
+if %IS_MICROSERVICE%==0 (
+    echo [WARN] %SERVICE% is not a microservice. Use 'restart' instead.
+    goto :restart_service
+)
+
+echo ========================================
+echo Rebuilding %SERVICE%
+echo ========================================
+
+REM Step 1: Stop container
+echo [1/6] Stopping container...
+%DOCKER_COMPOSE_CMD% stop "%SERVICE%" 2>nul
+echo [OK] Container stopped
+
+REM Step 2: Remove container
+echo [2/6] Removing container...
+%DOCKER_COMPOSE_CMD% rm -f "%SERVICE%" 2>nul
+echo [OK] Container removed
+
+REM Step 3: Remove Docker image
+echo [3/6] Removing Docker image...
+docker rmi "whole-system-%SERVICE%" 2>nul
+echo [OK] Docker image removed
+
+REM Step 4: Build JAR locally
+echo [4/6] Building JAR with Maven...
+cd "%SERVICE_DIR%"
+if not exist "mvnw.cmd" (
+    echo [ERROR] mvnw.cmd not found in %SERVICE_DIR%
+    cd ..\..
     exit /b 1
 )
-echo [OK] Build successful
-echo [INFO] Restarting %SERVICE%...
-docker-compose up -d "%SERVICE%"
+call mvnw.cmd clean package -DskipTests
 if %errorlevel% neq 0 (
-    echo [ERROR] Failed to restart service
+    echo [ERROR] Maven build failed
+    cd ..\..
     exit /b 1
 )
-echo [OK] Service restarted successfully
+cd ..\..
+echo [OK] JAR built successfully
+
+REM Step 5: Build Docker image
+echo [5/6] Building Docker image...
+%DOCKER_COMPOSE_CMD% build "%SERVICE%"
+if %errorlevel% neq 0 (
+    echo [ERROR] Docker build failed
+    exit /b 1
+)
+echo [OK] Docker image built
+
+REM Step 6: Start container
+echo [6/6] Starting container...
+%DOCKER_COMPOSE_CMD% up -d "%SERVICE%"
+if %errorlevel% neq 0 (
+    echo [ERROR] Failed to start container
+    exit /b 1
+)
+echo [OK] Container started
+
+echo.
+echo ========================================
+echo [OK] %SERVICE% rebuilt successfully
+echo ========================================
 echo.
 echo View logs with: service.bat logs %SERVICE_INPUT%
 exit /b
 
 :restart_service
 echo [INFO] Restarting %SERVICE%...
-docker-compose restart "%SERVICE%"
+%DOCKER_COMPOSE_CMD% restart "%SERVICE%"
 if %errorlevel% neq 0 (
     echo [ERROR] Failed to restart service
     exit /b 1
@@ -117,7 +193,7 @@ exit /b
 
 :stop_service
 echo [INFO] Stopping %SERVICE%...
-docker-compose stop "%SERVICE%"
+%DOCKER_COMPOSE_CMD% stop "%SERVICE%"
 if %errorlevel% neq 0 (
     echo [ERROR] Failed to stop service
     exit /b 1
@@ -127,7 +203,7 @@ exit /b
 
 :start_service
 echo [INFO] Starting %SERVICE%...
-docker-compose up -d "%SERVICE%"
+%DOCKER_COMPOSE_CMD% up -d "%SERVICE%"
 if %errorlevel% neq 0 (
     echo [ERROR] Failed to start service
     exit /b 1
@@ -137,15 +213,15 @@ exit /b
 
 :view_logs
 echo [INFO] Showing logs for %SERVICE% (Ctrl+C to exit)...
-docker-compose logs -f --tail=100 "%SERVICE%"
+%DOCKER_COMPOSE_CMD% logs -f --tail=100 "%SERVICE%"
 exit /b
 
 :show_status
 echo [INFO] Status for %SERVICE%:
-docker-compose ps "%SERVICE%"
+%DOCKER_COMPOSE_CMD% ps "%SERVICE%"
 exit /b
 
 :exec_bash
 echo [INFO] Opening bash in %SERVICE% container...
-docker-compose exec "%SERVICE%" /bin/bash
+%DOCKER_COMPOSE_CMD% exec "%SERVICE%" /bin/bash
 exit /b

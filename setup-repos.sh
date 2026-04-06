@@ -7,18 +7,18 @@
 
 # FILL IN THESE REPOSITORY URLS
 # Services (4 repositories)
-IDENTITY_SERVICE_REPO="https://github.com/HK251-DATN/identity-service.git"
-BACK_OFFICE_SERVICE_REPO="https://github.com/HK251-DATN/back-office-service.git"
-PRODUCT_STORAGE_SERVICE_REPO="https://github.com/HK251-DATN/product_storage_service.git"
+IDENTITY_SERVICE_REPO="git@github.com:HK251-DATN/identity-service.git"
+BACK_OFFICE_SERVICE_REPO="git@github.com:HK251-DATN/back-office-service.git"
+PRODUCT_STORAGE_SERVICE_REPO="git@github.com:HK251-DATN/product_storage_service.git"
 ECOMMERCE_SERVICE_REPO="git@github.com:HK251-DATN/ecommerce-temp.git"
 
 # Infrastructure (2 repositories)
 DATABASE_INFRA_REPO="git@github.com:HK251-DATN/database_schema.git"
-KAFKA_INFRA_REPO="https://github.com/HK251-DATN/kafka-share.git"
+KAFKA_INFRA_REPO="git@github.com:HK251-DATN/kafka-share.git"
 
 # Frontend (2 repositories)
-FRONTEND_REPO_1="https://github.com/HK251-DATN/FE-prototype.git"
-FRONTEND_REPO_2="https://github.com/HK251-DATN/back-office-ui.git"
+FRONTEND_REPO_1="git@github.com:HK251-DATN/FE-prototype.git"
+FRONTEND_REPO_2="git@github.com:HK251-DATN/back-office-ui.git"
 
 # =============================================================================
 

@@ -26,6 +26,14 @@ declare -A SERVICE_MAP=(
     ["kafka-ui"]="kafka-ui"
 )
 
+# Service directory mapping (for Maven builds)
+declare -A SERVICE_DIR=(
+    ["identity-service"]="services/identity-service"
+    ["back-office-service"]="services/back-office-service"
+    ["product-storage-service"]="services/product_storage_service"
+    ["ecommerce-service"]="services/ecommerce-service"
+)
+
 show_usage() {
     echo -e "${BLUE}Usage:${NC}"
     echo "  ./service.sh <command> <service-name>"
@@ -66,9 +74,19 @@ get_service_name() {
     fi
 }
 
-# Check if docker-compose is running
+# Check if docker-compose is available and detect which command to use
 check_docker_compose() {
-    if ! docker-compose ps >/dev/null 2>&1; then
+    if command -v docker-compose &> /dev/null; then
+        DOCKER_COMPOSE_CMD="docker-compose"
+    elif docker compose version &> /dev/null; then
+        DOCKER_COMPOSE_CMD="docker compose"
+    else
+        echo -e "${RED}Error: docker-compose is not installed${NC}"
+        exit 1
+    fi
+
+    # Check if docker compose is running
+    if ! $DOCKER_COMPOSE_CMD ps >/dev/null 2>&1; then
         echo -e "${RED}Error: Docker Compose is not running or docker-compose.yml not found${NC}"
         echo "Run './start.sh' first to start all services"
         exit 1
@@ -78,33 +96,84 @@ check_docker_compose() {
 # Rebuild and restart a service
 rebuild_service() {
     local service=$1
-    echo -e "${YELLOW}→ Building $service...${NC}"
-    docker-compose build --no-cache "$service"
+    local service_dir="${SERVICE_DIR[$service]}"
 
-    if [ $? -eq 0 ]; then
-        echo -e "${GREEN}✓ Build successful${NC}"
-        echo -e "${YELLOW}→ Restarting $service...${NC}"
-        docker-compose up -d "$service"
+    # Only rebuild microservices (not infrastructure)
+    if [ -z "$service_dir" ]; then
+        echo -e "${YELLOW}⚠ $service is not a microservice. Use 'restart' instead.${NC}"
+        restart_service "$service"
+        return
+    fi
 
-        if [ $? -eq 0 ]; then
-            echo -e "${GREEN}✓ Service restarted successfully${NC}"
-            echo ""
-            echo "View logs with: ./service.sh logs $service"
-        else
-            echo -e "${RED}✗ Failed to restart service${NC}"
+    echo -e "${BLUE}========================================${NC}"
+    echo -e "${BLUE}Rebuilding $service${NC}"
+    echo -e "${BLUE}========================================${NC}"
+
+    # Step 1: Stop the container
+    echo -e "${YELLOW}→ [1/6] Stopping container...${NC}"
+    $DOCKER_COMPOSE_CMD stop "$service" 2>/dev/null
+    echo -e "${GREEN}✓ Container stopped${NC}"
+
+    # Step 2: Remove the container
+    echo -e "${YELLOW}→ [2/6] Removing container...${NC}"
+    $DOCKER_COMPOSE_CMD rm -f "$service" 2>/dev/null
+    echo -e "${GREEN}✓ Container removed${NC}"
+
+    # Step 3: Remove the Docker image
+    echo -e "${YELLOW}→ [3/6] Removing Docker image...${NC}"
+    local image_name="whole-system-${service}"
+    docker rmi "$image_name" 2>/dev/null || true
+    echo -e "${GREEN}✓ Docker image removed${NC}"
+
+    # Step 4: Build JAR locally
+    echo -e "${YELLOW}→ [4/6] Building JAR with Maven...${NC}"
+    cd "$service_dir"
+    if [ -f "./mvnw" ]; then
+        ./mvnw clean package -DskipTests
+        if [ $? -ne 0 ]; then
+            echo -e "${RED}✗ Maven build failed${NC}"
+            cd - > /dev/null
             exit 1
         fi
     else
-        echo -e "${RED}✗ Build failed${NC}"
+        echo -e "${RED}✗ mvnw not found in $service_dir${NC}"
+        cd - > /dev/null
         exit 1
     fi
+    cd - > /dev/null
+    echo -e "${GREEN}✓ JAR built successfully${NC}"
+
+    # Step 5: Build Docker image using Dockerfile.local
+    echo -e "${YELLOW}→ [5/6] Building Docker image...${NC}"
+    $DOCKER_COMPOSE_CMD build "$service"
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}✗ Docker build failed${NC}"
+        exit 1
+    fi
+    echo -e "${GREEN}✓ Docker image built${NC}"
+
+    # Step 6: Start the container
+    echo -e "${YELLOW}→ [6/6] Starting container...${NC}"
+    $DOCKER_COMPOSE_CMD up -d "$service"
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}✗ Failed to start container${NC}"
+        exit 1
+    fi
+    echo -e "${GREEN}✓ Container started${NC}"
+
+    echo ""
+    echo -e "${GREEN}========================================${NC}"
+    echo -e "${GREEN}✓ $service rebuilt successfully${NC}"
+    echo -e "${GREEN}========================================${NC}"
+    echo ""
+    echo "View logs with: ./service.sh logs $service"
 }
 
 # Restart a service without rebuilding
 restart_service() {
     local service=$1
     echo -e "${YELLOW}→ Restarting $service...${NC}"
-    docker-compose restart "$service"
+    $DOCKER_COMPOSE_CMD restart "$service"
 
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}✓ Service restarted successfully${NC}"
@@ -118,7 +187,7 @@ restart_service() {
 stop_service() {
     local service=$1
     echo -e "${YELLOW}→ Stopping $service...${NC}"
-    docker-compose stop "$service"
+    $DOCKER_COMPOSE_CMD stop "$service"
 
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}✓ Service stopped${NC}"
@@ -132,7 +201,7 @@ stop_service() {
 start_service() {
     local service=$1
     echo -e "${YELLOW}→ Starting $service...${NC}"
-    docker-compose up -d "$service"
+    $DOCKER_COMPOSE_CMD up -d "$service"
 
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}✓ Service started${NC}"
@@ -146,21 +215,21 @@ start_service() {
 view_logs() {
     local service=$1
     echo -e "${BLUE}→ Showing logs for $service (Ctrl+C to exit)...${NC}"
-    docker-compose logs -f --tail=100 "$service"
+    $DOCKER_COMPOSE_CMD logs -f --tail=100 "$service"
 }
 
 # Show status
 show_status() {
     local service=$1
     echo -e "${BLUE}→ Status for $service:${NC}"
-    docker-compose ps "$service"
+    $DOCKER_COMPOSE_CMD ps "$service"
 }
 
 # Execute bash in container
 exec_bash() {
     local service=$1
     echo -e "${BLUE}→ Opening bash in $service container...${NC}"
-    docker-compose exec "$service" /bin/bash
+    $DOCKER_COMPOSE_CMD exec "$service" /bin/bash
 }
 
 # Main script

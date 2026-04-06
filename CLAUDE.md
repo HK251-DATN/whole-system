@@ -20,32 +20,68 @@ ecommerce-microservices-platform/
 ├── infrastructure/         # Shared infrastructure
 │   ├── database/          # PostgreSQL 17 multi-database setup
 │   └── kafka/             # Kafka 4.2.0 + Kafka UI
-└── frontend/              # (Currently empty)
+└── frontend/              # React-based admin and customer UIs
+    ├── ecommerce-ui/      # Customer-facing e-commerce app (React + Vite)
+    └── back-office-ui/    # Admin interface (React + Vite + MUI + Ant Design)
 ```
 
 ## Quick Start
 
+## First-Time Repository Setup
+
+**IMPORTANT**: This is a monorepo that orchestrates 8 separate Git repositories.
+
+Before using Docker Compose or manual setup, clone all service repositories:
+
+```bash
+# Clone all microservice, infrastructure, and frontend repositories
+./setup-repos.sh    # Linux/Mac
+setup-repos.bat     # Windows
+```
+
+This creates:
+- `services/` - 4 microservice repositories
+- `infrastructure/` - 2 infrastructure repositories  
+- `frontend/` - 2 frontend repositories
+
+**Repository URLs** are configured in `setup-repos.sh` (already filled in for HK251-DATN organization).
+
 ### Option 1: Docker Compose (Recommended)
 
-**Start entire platform with one command:**
+**Start entire platform:**
 ```bash
-# 1. Copy environment template
+# 1. Clone all repositories (first time only)
+./setup-repos.sh
+
+# 2. Copy environment template
 cp .env.example .env
+# Edit .env and add your Cloudflare R2 credentials
 
-# 2. Edit .env and add your Cloudflare R2 credentials
+# 3. Build JARs locally (avoids Docker network issues)
+./build-local.sh    # Linux/Mac
+build-local.bat     # Windows
 
-# 3. Start all services
+# 4. Start all services
 ./start.sh          # Linux/Mac
 start.bat           # Windows
-
-# OR use Docker Compose directly
-docker-compose up -d --build
 ```
 
 This starts:
 - PostgreSQL (4 databases)
 - Kafka + Kafka UI
 - All 4 microservices
+
+**Start script subcommands:**
+```bash
+./start.sh          # Start all services
+./start.sh logs     # View all logs
+./start.sh logs identity-service  # View specific service logs
+./start.sh rebuild  # Rebuild all services
+./start.sh stop     # Stop all services
+./start.sh clean    # Stop and remove containers/volumes
+```
+
+For individual service management, use `service.sh` instead (see Development Workflow section).
 
 **See `DOCKER_SETUP.md` for complete Docker documentation.**
 
@@ -126,6 +162,20 @@ cd services/{service-name}
   - `persistence/` - Database access (repositories, DTOs)
   - `infrastructure/` - Framework concerns (config, messaging)
   - `presentation/` - REST API (controllers, request/response)
+
+## Frontend Applications
+
+### back-office-ui
+- **Tech**: React 19, Vite, Material-UI, Ant Design, Redux Toolkit, React Query
+- **Purpose**: Admin interface for product/category management
+- **Dev server**: `npm run dev` (typically port 5173)
+
+### ecommerce-ui  
+- **Tech**: React, Vite
+- **Purpose**: Customer-facing e-commerce application
+- **Dev server**: `npm run dev`
+
+**Note**: Frontend repos are separate from backend services and managed via `setup-repos.sh`.
 
 ## Event-Driven Architecture
 
@@ -243,6 +293,35 @@ Schemas are managed via JPA with `hibernate.ddl-auto: update`.
 
 Tests use Spring Boot Test framework with JPA and WebMVC testing support.
 
+## Development Workflow - Individual Service Management
+
+When working on a single service, use `service.sh` to quickly rebuild/restart:
+
+```bash
+# Rebuild and restart after code changes (recommended workflow)
+./service.sh rebuild identity           # Apply changes to identity service
+./service.sh rebuild back-office        # Apply changes to back-office
+./service.sh rebuild product-storage    # Apply changes to product storage
+./service.sh rebuild ecommerce          # Apply changes to ecommerce
+
+# Other useful commands
+./service.sh logs identity              # View logs (follow mode)
+./service.sh restart identity           # Restart without rebuilding
+./service.sh stop identity              # Stop a service
+./service.sh start identity             # Start a service
+./service.sh status identity            # Show service status
+./service.sh exec identity              # Open bash inside container
+```
+
+**Service aliases supported:**
+- `identity`, `back-office`/`backoffice`, `product-storage`/`product`, `ecommerce`
+- `postgres`/`db`, `kafka`, `kafka-ui`
+
+**Common workflow:**
+1. Edit code in `services/{service-name}/`
+2. Run `./service.sh rebuild {service-name}`
+3. Run `./service.sh logs {service-name}` to verify startup
+
 ## External Dependencies
 
 ### Cloudflare R2 (Object Storage)
@@ -270,7 +349,7 @@ When working across services:
    - back-office-service (no dependencies)
    - product_storage_service (depends on back-office events)
    - ecommerce-service (depends on product storage events)
-3. **Check Kafka UI** (localhost:9280) to verify event flow
+3. **Check Kafka UI** (http://localhost:9280) to verify event flow
 4. **Different Spring Boot versions**: Be aware that ecommerce-service uses 3.5.6 (Java 21) while others use 4.x (Java 25)
 
 ## Key Architectural Decisions

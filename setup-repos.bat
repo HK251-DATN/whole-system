@@ -6,18 +6,18 @@ REM ============================================================================
 
 REM FILL IN THESE REPOSITORY URLS
 REM Services (4 repositories)
-set IDENTITY_SERVICE_REPO=https://github.com/HK251-DATN/identity-service.git
-set BACK_OFFICE_SERVICE_REPO=https://github.com/HK251-DATN/back-office-service.git
-set PRODUCT_STORAGE_SERVICE_REPO=https://github.com/HK251-DATN/product_storage_service.git
+set IDENTITY_SERVICE_REPO=git@github.com:HK251-DATN/identity-service.git
+set BACK_OFFICE_SERVICE_REPO=git@github.com:HK251-DATN/back-office-service.git
+set PRODUCT_STORAGE_SERVICE_REPO=git@github.com:HK251-DATN/product_storage_service.git
 set ECOMMERCE_SERVICE_REPO=git@github.com:HK251-DATN/ecommerce-temp.git
 
 REM Infrastructure (2 repositories)
 set DATABASE_INFRA_REPO=git@github.com:HK251-DATN/database_schema.git
-set KAFKA_INFRA_REPO=https://github.com/HK251-DATN/kafka-share.git
+set KAFKA_INFRA_REPO=git@github.com:HK251-DATN/kafka-share.git
 
 REM Frontend (2 repositories)
-set FRONTEND_REPO_1=https://github.com/HK251-DATN/FE-prototype.git
-set FRONTEND_REPO_2=https://github.com/HK251-DATN/back-office-ui.git
+set FRONTEND_REPO_1=git@github.com:HK251-DATN/FE-prototype.git
+set FRONTEND_REPO_2=git@github.com:HK251-DATN/back-office-ui.git
 
 REM =============================================================================
 
