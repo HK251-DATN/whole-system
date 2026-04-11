@@ -10,7 +10,7 @@
 IDENTITY_SERVICE_REPO="git@github.com:HK251-DATN/identity-service.git"
 BACK_OFFICE_SERVICE_REPO="git@github.com:HK251-DATN/back-office-service.git"
 PRODUCT_STORAGE_SERVICE_REPO="git@github.com:HK251-DATN/product_storage_service.git"
-ECOMMERCE_SERVICE_REPO="git@github.com:HK251-DATN/ecommerce-temp.git"
+ECOMMERCE_SERVICE_REPO="git@github.com:hoangvanlongse/datn_hcmut.git"
 
 # Infrastructure (2 repositories)
 DATABASE_INFRA_REPO="git@github.com:HK251-DATN/database_schema.git"
