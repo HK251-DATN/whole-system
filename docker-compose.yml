@@ -155,8 +155,6 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
-      kafka-init:
-        condition: service_completed_successfully
     environment:
       # Database
       DB_HOST: postgres
@@ -188,8 +186,6 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
-      kafka-init:
-        condition: service_completed_successfully
     environment:
       # Database
       DB_HOST: postgres
@@ -205,7 +201,7 @@ services:
       R2_SECRET_KEY: ${R2_SECRET_KEY}
       USER_AVATAR_PUBLIC_BUCKET_URL: ${USER_AVATAR_PUBLIC_BUCKET_URL:-https://pub-954e99f131cf4cc896de1ad360338682.r2.dev}
     ports:
-      - "9301:9301"
+      - "9300:9300"
     networks:
       - ecommerce-network
     restart: on-failure
