@@ -70,6 +70,7 @@ This starts:
 - PostgreSQL (4 databases)
 - Kafka + Kafka UI
 - All 4 microservices
+- Both frontend applications (ecommerce-ui and back-office-ui)
 
 **Start script subcommands:**
 ```bash
@@ -156,12 +157,21 @@ cd services/{service-name}
 - **Tech**: Spring Boot 3.5.6, Java 21, Clean Architecture pattern
 - **Database**: ecommerce_db_2
 - **Responsibilities**: Order processing, sales transactions, pricing
+- **Authentication**: JWT-based (via custom filter) - different from identity-service's OAuth2
 - **Kafka Consumers**: `batch-detail-events` (from product storage)
 - **Architecture**: Clean Architecture (domain → use cases → infrastructure)
   - `domain/` - Pure business logic (entities, use cases, services)
   - `persistence/` - Database access (repositories, DTOs)
   - `infrastructure/` - Framework concerns (config, messaging)
   - `presentation/` - REST API (controllers, request/response)
+- **Data Seeder**: Automatically populates database with Vietnamese fresh food sample data on first run:
+  - 5 buyers with addresses
+  - 18 product categories (hierarchical)
+  - 15 fresh food products (fruits, vegetables, meat, seafood, dairy)
+  - 15 batch details with pricing
+  - 3 active sale events with discounts
+  - Shopping carts and product reviews in Vietnamese
+  - Seeder only runs when database is empty (checks `buyer` table)
 
 ## Frontend Applications
 
@@ -176,6 +186,35 @@ cd services/{service-name}
 - **Dev server**: `npm run dev`
 
 **Note**: Frontend repos are separate from backend services and managed via `setup-repos.sh`.
+
+### Frontend Development Workflow
+
+**Local Development (without Docker):**
+```bash
+cd frontend/back-office-ui  # or frontend/ecommerce-ui
+npm install
+npm run dev
+```
+
+**Docker Development:**
+Frontend services are included in docker-compose.yml and can be managed with service.sh:
+```bash
+./service.sh rebuild ecommerce-ui      # Rebuild ecommerce UI
+./service.sh rebuild back-office-ui    # Rebuild back-office UI
+./service.sh logs ecommerce-ui         # View ecommerce UI logs
+./service.sh logs back-office-ui       # View back-office UI logs
+```
+
+**Access URLs (Docker):**
+- Ecommerce UI: http://localhost:3000
+- Back-Office UI: http://localhost:5173
+
+**Stack:**
+- React 19, Vite, TypeScript (ecommerce-ui uses JavaScript)
+- State: Redux Toolkit, React Query
+- UI: Material-UI (back-office), Ant Design (back-office)
+- API calls integrate with backend services on ports 9000-9301
+- Production builds served via Nginx in Docker containers
 
 ## Event-Driven Architecture
 
@@ -274,10 +313,19 @@ Each service has database schema documentation:
 
 Schemas are managed via JPA with `hibernate.ddl-auto: update`.
 
+## Service-Specific Documentation
+
+Each service has detailed CLAUDE.md files with service-specific architecture and patterns:
+- `services/identity-service/CLAUDE.md` - Detailed identity service architecture
+- `services/back-office-service/CLAUDE.md` - Back-office service specifics
+- `services/product_storage_service/CLAUDE.md` - Storage hierarchy and batch processing details
+- `services/ecommerce-service/CLAUDE.md` - Clean architecture patterns and use cases
+
 ## Testing
 
 **Run all tests in a service:**
 ```bash
+cd services/{service-name}
 ./mvnw test
 ```
 
@@ -286,9 +334,19 @@ Schemas are managed via JPA with `hibernate.ddl-auto: update`.
 ./mvnw test -Dtest=ClassNameTest
 ```
 
+**Run specific test method:**
+```bash
+./mvnw test -Dtest=ClassNameTest#methodName
+```
+
 **Run with coverage:**
 ```bash
 ./mvnw clean verify
+```
+
+**Skip tests during build:**
+```bash
+./mvnw clean install -DskipTests
 ```
 
 Tests use Spring Boot Test framework with JPA and WebMVC testing support.
@@ -315,12 +373,30 @@ When working on a single service, use `service.sh` to quickly rebuild/restart:
 
 **Service aliases supported:**
 - `identity`, `back-office`/`backoffice`, `product-storage`/`product`, `ecommerce`
+- `ecommerce-ui`, `back-office-ui`/`backoffice-ui`
 - `postgres`/`db`, `kafka`, `kafka-ui`
 
 **Common workflow:**
 1. Edit code in `services/{service-name}/`
 2. Run `./service.sh rebuild {service-name}`
 3. Run `./service.sh logs {service-name}` to verify startup
+
+### When to Rebuild vs Restart
+
+**Rebuild required** (code changes):
+```bash
+./service.sh rebuild {service-name}
+```
+
+**Restart sufficient** (config/.env changes):
+```bash
+./service.sh restart {service-name}
+```
+
+**Just view logs** (no changes):
+```bash
+./service.sh logs {service-name}
+```
 
 ## External Dependencies
 
@@ -380,6 +456,8 @@ Product storage service performs critical batch-to-detail conversion:
 - 9092: Kafka
 - 9280: Kafka UI
 - 9000, 9100, 9200, 9301: Microservices
+- 3000: Ecommerce UI
+- 5173: Back-Office UI
 
 **Kafka consumer not receiving events:**
 1. Check Kafka UI (localhost:9280) - verify topic exists

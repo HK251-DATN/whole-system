@@ -24,6 +24,9 @@ declare -A SERVICE_MAP=(
     ["db"]="postgres"
     ["kafka"]="kafka"
     ["kafka-ui"]="kafka-ui"
+    ["ecommerce-ui"]="ecommerce-ui"
+    ["back-office-ui"]="back-office-ui"
+    ["backoffice-ui"]="back-office-ui"
 )
 
 # Service directory mapping (for Maven builds)
@@ -52,6 +55,8 @@ show_usage() {
     echo "  back-office      - Back Office Service (port 9100)"
     echo "  product-storage  - Product Storage Service (port 9200)"
     echo "  ecommerce        - Ecommerce Service (port 9301)"
+    echo "  ecommerce-ui     - Ecommerce UI (port 3000)"
+    echo "  back-office-ui   - Back Office UI (port 5173)"
     echo "  postgres / db    - PostgreSQL Database"
     echo "  kafka            - Kafka Broker"
     echo "  kafka-ui         - Kafka UI"

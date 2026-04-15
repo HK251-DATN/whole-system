@@ -61,6 +61,8 @@ echo   identity         - Identity Service (port 9000)
 echo   back-office      - Back Office Service (port 9100)
 echo   product-storage  - Product Storage Service (port 9200)
 echo   ecommerce        - Ecommerce Service (port 9301)
+echo   ecommerce-ui     - Ecommerce UI (port 3000)
+echo   back-office-ui   - Back Office UI (port 5173)
 echo   postgres / db    - PostgreSQL Database
 echo   kafka            - Kafka Broker
 echo   kafka-ui         - Kafka UI
@@ -82,6 +84,9 @@ if "%INPUT%"=="backoffice" set SERVICE=back-office-service& exit /b
 if "%INPUT%"=="product-storage" set SERVICE=product-storage-service& exit /b
 if "%INPUT%"=="product" set SERVICE=product-storage-service& exit /b
 if "%INPUT%"=="ecommerce" set SERVICE=ecommerce-service& exit /b
+if "%INPUT%"=="ecommerce-ui" set SERVICE=ecommerce-ui& exit /b
+if "%INPUT%"=="back-office-ui" set SERVICE=back-office-ui& exit /b
+if "%INPUT%"=="backoffice-ui" set SERVICE=back-office-ui& exit /b
 if "%INPUT%"=="postgres" set SERVICE=postgres& exit /b
 if "%INPUT%"=="db" set SERVICE=postgres& exit /b
 if "%INPUT%"=="kafka" set SERVICE=kafka& exit /b

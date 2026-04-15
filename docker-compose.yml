@@ -206,6 +206,42 @@ services:
       - ecommerce-network
     restart: on-failure
 
+  # ==================== FRONTEND APPLICATIONS ====================
+
+  # Ecommerce UI (Port 3000)
+  ecommerce-ui:
+    build:
+      context: ./frontend/ecommerce-ui
+      dockerfile: Dockerfile
+    container_name: ecommerce-ui
+    depends_on:
+      - identity-service
+      - back-office-service
+      - product-storage-service
+      - ecommerce-service
+    ports:
+      - "3000:80"
+    networks:
+      - ecommerce-network
+    restart: unless-stopped
+
+  # Back-Office UI (Port 5173)
+  back-office-ui:
+    build:
+      context: ./frontend/back-office-ui
+      dockerfile: Dockerfile
+    container_name: back-office-ui
+    depends_on:
+      - identity-service
+      - back-office-service
+      - product-storage-service
+      - ecommerce-service
+    ports:
+      - "5173:80"
+    networks:
+      - ecommerce-network
+    restart: unless-stopped
+
 # ==================== NETWORKS & VOLUMES ====================
 
 networks:
