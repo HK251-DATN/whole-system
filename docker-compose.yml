@@ -24,6 +24,24 @@ services:
       retries: 5
     restart: unless-stopped
 
+  # pgAdmin - PostgreSQL Administration Tool
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: ecommerce_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@ecommerce.local}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    ports:
+      - "5480:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - ecommerce-network
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
   # Kafka Broker
   kafka:
     image: apache/kafka:4.2.0
@@ -200,6 +218,7 @@ services:
       R2_ACCESS_KEY: ${R2_ACCESS_KEY}
       R2_SECRET_KEY: ${R2_SECRET_KEY}
       USER_AVATAR_PUBLIC_BUCKET_URL: ${USER_AVATAR_PUBLIC_BUCKET_URL:-https://pub-954e99f131cf4cc896de1ad360338682.r2.dev}
+      GOOGLE_GEO_API_KEY: ${GOOGLE_GEO_API_KEY}
     ports:
       - "9300:9300"
     networks:
@@ -209,38 +228,38 @@ services:
   # ==================== FRONTEND APPLICATIONS ====================
 
   # Ecommerce UI (Port 3000)
-  ecommerce-ui:
-    build:
-      context: ./frontend/ecommerce-ui
-      dockerfile: Dockerfile
-    container_name: ecommerce-ui
-    depends_on:
-      - identity-service
-      - back-office-service
-      - product-storage-service
-      - ecommerce-service
-    ports:
-      - "3000:80"
-    networks:
-      - ecommerce-network
-    restart: unless-stopped
+  # ecommerce-ui:
+  #   build:
+  #     context: ./frontend/ecommerce-ui
+  #     dockerfile: Dockerfile
+  #   container_name: ecommerce-ui
+  #   depends_on:
+  #     - identity-service
+  #     - back-office-service
+  #     - product-storage-service
+  #     - ecommerce-service
+  #   ports:
+  #     - "3000:80"
+  #   networks:
+  #     - ecommerce-network
+  #   restart: unless-stopped
 
-  # Back-Office UI (Port 5173)
-  back-office-ui:
-    build:
-      context: ./frontend/back-office-ui
-      dockerfile: Dockerfile
-    container_name: back-office-ui
-    depends_on:
-      - identity-service
-      - back-office-service
-      - product-storage-service
-      - ecommerce-service
-    ports:
-      - "5173:80"
-    networks:
-      - ecommerce-network
-    restart: unless-stopped
+  # # Back-Office UI (Port 5173)
+  # back-office-ui:
+  #   build:
+  #     context: ./frontend/back-office-ui
+  #     dockerfile: Dockerfile
+  #   container_name: back-office-ui
+  #   depends_on:
+  #     - identity-service
+  #     - back-office-service
+  #     - product-storage-service
+  #     - ecommerce-service
+  #   ports:
+  #     - "5173:80"
+  #   networks:
+  #     - ecommerce-network
+  #   restart: unless-stopped
 
 # ==================== NETWORKS & VOLUMES ====================
 
@@ -250,6 +269,8 @@ networks:
 
 volumes:
   postgres_data:
+    driver: local
+  pgadmin_data:
     driver: local
   kafka_data:
     driver: local
