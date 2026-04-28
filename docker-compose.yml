@@ -125,6 +125,13 @@ services:
       # Cloudflare R2
       R2_ACCESS_KEY: ${R2_ACCESS_KEY}
       R2_SECRET_KEY: ${R2_SECRET_KEY}
+      # Inter-service REST
+      BACK_OFFICE_HOST: back-office-service
+      BACK_OFFICE_PORT: 9100
+      PRODUCT_STORAGE_HOST: product-storage-service
+      PRODUCT_STORAGE_PORT: 9200
+      ECOMMERCE_HOST: ecommerce-service
+      ECOMMERCE_PORT: 9300
     ports:
       - "9000:9000"
     networks:
@@ -156,6 +163,13 @@ services:
       R2_ACCESS_KEY: ${R2_ACCESS_KEY}
       R2_SECRET_KEY: ${R2_SECRET_KEY}
       USER_AVATAR_PUBLIC_BUCKET_URL: ${USER_AVATAR_PUBLIC_BUCKET_URL:-https://pub-954e99f131cf4cc896de1ad360338682.r2.dev}
+      # Inter-service REST
+      IDENTITY_HOST: identity-service
+      IDENTITY_PORT: 9000
+      PRODUCT_STORAGE_HOST: product-storage-service
+      PRODUCT_STORAGE_PORT: 9200
+      ECOMMERCE_HOST: ecommerce-service
+      ECOMMERCE_PORT: 9300
     ports:
       - "9100:9100"
     networks:
@@ -187,13 +201,20 @@ services:
       R2_ACCESS_KEY: ${R2_ACCESS_KEY}
       R2_SECRET_KEY: ${R2_SECRET_KEY}
       USER_AVATAR_PUBLIC_BUCKET_URL: ${USER_AVATAR_PUBLIC_BUCKET_URL:-https://pub-954e99f131cf4cc896de1ad360338682.r2.dev}
+      # Inter-service REST
+      IDENTITY_HOST: identity-service
+      IDENTITY_PORT: 9000
+      BACK_OFFICE_HOST: back-office-service
+      BACK_OFFICE_PORT: 9100
+      ECOMMERCE_HOST: ecommerce-service
+      ECOMMERCE_PORT: 9300
     ports:
       - "9200:9200"
     networks:
       - ecommerce-network
     restart: on-failure
 
-  # Ecommerce Service (Port 9301)
+  # Ecommerce Service (Port 9300)
   ecommerce-service:
     build:
       context: ./services/ecommerce-service
@@ -204,6 +225,8 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
+      product-storage-service:
+        condition: service_started
     environment:
       # Database
       DB_HOST: postgres
@@ -219,6 +242,13 @@ services:
       R2_SECRET_KEY: ${R2_SECRET_KEY}
       USER_AVATAR_PUBLIC_BUCKET_URL: ${USER_AVATAR_PUBLIC_BUCKET_URL:-https://pub-954e99f131cf4cc896de1ad360338682.r2.dev}
       GOONG_API_KEY: ${GOONG_API_KEY}
+      # Inter-service REST
+      IDENTITY_HOST: identity-service
+      IDENTITY_PORT: 9000
+      BACK_OFFICE_HOST: back-office-service
+      BACK_OFFICE_PORT: 9100
+      PRODUCT_STORAGE_HOST: product-storage-service
+      PRODUCT_STORAGE_PORT: 9200
     ports:
       - "9300:9300"
     networks:
