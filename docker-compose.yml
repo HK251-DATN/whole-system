@@ -44,7 +44,7 @@ services:
 
   # Kafka Broker
   kafka:
-    image: apache/kafka:4.2.0
+    image: apache/kafka:4.2.1-rc3
     container_name: ecommerce_kafka
     user: root
     volumes:
@@ -74,7 +74,7 @@ services:
 
   # Kafka Topic Initialization
   kafka-init:
-    image: apache/kafka:4.2.0
+    image: apache/kafka:4.2.1-rc3
     container_name: ecommerce_kafka_init
     depends_on:
       kafka:

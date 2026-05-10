@@ -19,6 +19,7 @@ KAFKA_INFRA_REPO="git@github.com:HK251-DATN/kafka-share.git"
 # Frontend (2 repositories)
 FRONTEND_REPO_1="git@github.com:HK251-DATN/FE-prototype.git"
 FRONTEND_REPO_2="git@github.com:HK251-DATN/back-office-ui.git"
+FRONTEND_REPO_3="git@github.com:HK251-DATN/provider-ui.git"
 
 # =============================================================================
 
@@ -95,6 +96,7 @@ echo "Cloning Frontend Repositories (2/8)"
 echo "=========================================="
 clone_repo "$FRONTEND_REPO_1" "frontend/ecommerce-ui" "ecommerce-ui"
 clone_repo "$FRONTEND_REPO_2" "frontend/back-office-ui" "back-office-ui"
+clone_repo "$FRONTEND_REPO_3" "frontend/provider-ui" "provider-ui"
 
 echo "=========================================="
 echo "Setup Complete!"

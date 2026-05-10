@@ -18,6 +18,7 @@ set KAFKA_INFRA_REPO=git@github.com:HK251-DATN/kafka-share.git
 REM Frontend (2 repositories)
 set FRONTEND_REPO_1=git@github.com:HK251-DATN/FE-prototype.git
 set FRONTEND_REPO_2=git@github.com:HK251-DATN/back-office-ui.git
+set FRONTEND_REPO_3=git@github.com:HK251-DATN/provider-ui.git
 
 REM =============================================================================
 
@@ -56,6 +57,7 @@ echo Cloning Frontend Repositories (2/8)
 echo ==========================================
 call :clone_repo "%FRONTEND_REPO_1%" "frontend\ecommerce-ui" "ecommerce-ui"
 call :clone_repo "%FRONTEND_REPO_2%" "frontend\back-office-ui" "back-office-ui"
+call :clone_repo "%FRONTEND_REPO_3%" "frontend\provider-ui" "provider-ui"
 
 echo ==========================================
 echo Setup Complete!

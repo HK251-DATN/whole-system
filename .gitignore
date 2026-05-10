@@ -214,3 +214,6 @@ infrastructure/kafka/kafka_data/
 # Debug files
 debug.log
 nohup.out
+
+# md
+*.md
