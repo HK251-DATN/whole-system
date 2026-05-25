@@ -11,6 +11,7 @@ IDENTITY_SERVICE_REPO="git@github.com:HK251-DATN/identity-service.git"
 BACK_OFFICE_SERVICE_REPO="git@github.com:HK251-DATN/back-office-service.git"
 PRODUCT_STORAGE_SERVICE_REPO="git@github.com:HK251-DATN/product_storage_service.git"
 ECOMMERCE_SERVICE_REPO="git@github.com:hoangvanlongse/datn_hcmut.git"
+SEARCH_CHAT_SERVICE_REPO="git@github.com:HK251-DATN/recommend-feature.git"
 
 # Infrastructure (2 repositories)
 DATABASE_INFRA_REPO="git@github.com:HK251-DATN/database_schema.git"
@@ -76,23 +77,24 @@ echo ""
 
 # Clone services
 echo "=========================================="
-echo "Cloning Service Repositories (4/8)"
+echo "Cloning Service Repositories (5/9)"
 echo "=========================================="
 clone_repo "$IDENTITY_SERVICE_REPO" "services/identity-service" "identity-service"
 clone_repo "$BACK_OFFICE_SERVICE_REPO" "services/back-office-service" "back-office-service"
 clone_repo "$PRODUCT_STORAGE_SERVICE_REPO" "services/product_storage_service" "product_storage_service"
 clone_repo "$ECOMMERCE_SERVICE_REPO" "services/ecommerce-service" "ecommerce-service"
+clone_repo "$SEARCH_CHAT_SERVICE_REPO" "services/search-chat-service" "search-chat-service"
 
 # Clone infrastructure
 echo "=========================================="
-echo "Cloning Infrastructure Repositories (2/8)"
+echo "Cloning Infrastructure Repositories (2/9)"
 echo "=========================================="
 clone_repo "$DATABASE_INFRA_REPO" "infrastructure/database" "database-infrastructure"
 clone_repo "$KAFKA_INFRA_REPO" "infrastructure/kafka" "kafka-infrastructure"
 
 # Clone frontend
 echo "=========================================="
-echo "Cloning Frontend Repositories (2/8)"
+echo "Cloning Frontend Repositories (3/9)"
 echo "=========================================="
 clone_repo "$FRONTEND_REPO_1" "frontend/ecommerce-ui" "ecommerce-ui"
 clone_repo "$FRONTEND_REPO_2" "frontend/back-office-ui" "back-office-ui"

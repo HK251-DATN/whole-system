@@ -27,6 +27,9 @@ declare -A SERVICE_MAP=(
     ["ecommerce-ui"]="ecommerce-ui"
     ["back-office-ui"]="back-office-ui"
     ["backoffice-ui"]="back-office-ui"
+    ["search-chat"]="search-chat-service"
+    ["search"]="search-chat-service"
+    ["chat"]="search-chat-service"
 )
 
 # Service directory mapping (for Maven builds)
@@ -35,6 +38,11 @@ declare -A SERVICE_DIR=(
     ["back-office-service"]="services/back-office-service"
     ["product-storage-service"]="services/product_storage_service"
     ["ecommerce-service"]="services/ecommerce-service"
+)
+
+# Service directory mapping (for Python/Docker-only builds)
+declare -A PYTHON_SERVICE_DIR=(
+    ["search-chat-service"]="services/search-chat-service"
 )
 
 show_usage() {
@@ -57,6 +65,7 @@ show_usage() {
     echo "  ecommerce        - Ecommerce Service (port 9301)"
     echo "  ecommerce-ui     - Ecommerce UI (port 3000)"
     echo "  back-office-ui   - Back Office UI (port 5173)"
+    echo "  search-chat      - Search & Chat Service (port 9400)"
     echo "  postgres / db    - PostgreSQL Database"
     echo "  kafka            - Kafka Broker"
     echo "  kafka-ui         - Kafka UI"
@@ -102,6 +111,46 @@ check_docker_compose() {
 rebuild_service() {
     local service=$1
     local service_dir="${SERVICE_DIR[$service]}"
+    local python_service_dir="${PYTHON_SERVICE_DIR[$service]}"
+
+    # Python service (no Maven) — rebuild via Docker only
+    if [ -n "$python_service_dir" ]; then
+        echo -e "${BLUE}========================================${NC}"
+        echo -e "${BLUE}Rebuilding $service (Python)${NC}"
+        echo -e "${BLUE}========================================${NC}"
+
+        echo -e "${YELLOW}→ [1/4] Stopping container...${NC}"
+        $DOCKER_COMPOSE_CMD stop "$service" 2>/dev/null
+        echo -e "${GREEN}✓ Container stopped${NC}"
+
+        echo -e "${YELLOW}→ [2/4] Removing container...${NC}"
+        $DOCKER_COMPOSE_CMD rm -f "$service" 2>/dev/null
+        echo -e "${GREEN}✓ Container removed${NC}"
+
+        echo -e "${YELLOW}→ [3/4] Building Docker image...${NC}"
+        $DOCKER_COMPOSE_CMD build "$service"
+        if [ $? -ne 0 ]; then
+            echo -e "${RED}✗ Docker build failed${NC}"
+            exit 1
+        fi
+        echo -e "${GREEN}✓ Docker image built${NC}"
+
+        echo -e "${YELLOW}→ [4/4] Starting container...${NC}"
+        $DOCKER_COMPOSE_CMD up -d "$service"
+        if [ $? -ne 0 ]; then
+            echo -e "${RED}✗ Failed to start container${NC}"
+            exit 1
+        fi
+        echo -e "${GREEN}✓ Container started${NC}"
+
+        echo ""
+        echo -e "${GREEN}========================================${NC}"
+        echo -e "${GREEN}✓ $service rebuilt successfully${NC}"
+        echo -e "${GREEN}========================================${NC}"
+        echo ""
+        echo "View logs with: ./service.sh logs $service"
+        return
+    fi
 
     # Only rebuild microservices (not infrastructure)
     if [ -z "$service_dir" ]; then

@@ -255,6 +255,66 @@ services:
       - ecommerce-network
     restart: on-failure
 
+  # ==================== SEARCH & CHAT ====================
+
+  # Elasticsearch - for search-chat-service
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.0
+    container_name: ecommerce_elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms256m -Xmx256m
+      - node.store.allow_mmap=false
+    ports:
+      - "9250:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - ecommerce-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    restart: unless-stopped
+
+  # Search & Chat Service (Port 9400)
+  search-chat-service:
+    build: ./services/search-chat-service
+    container_name: search-chat-service
+    environment:
+      - ELASTICSEARCH_HOST=http://elasticsearch:9200
+      - ELASTICSEARCH_USER=
+      - ELASTICSEARCH_PASSWORD=
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USERNAME=${DB_USERNAME:-khoidev}
+      - DB_PASSWORD=${DB_PASSWORD:-khoicktv}
+      - SEARCH_CHAT_DB_NAME=ecommerce_db
+    volumes:
+      # Mount source files so script changes only need a restart, not a full rebuild.
+      # Heavy layers (pip packages, model) stay baked in the image.
+      - ./services/search-chat-service/app.py:/app/app.py
+      - ./services/search-chat-service/search_engine.py:/app/search_engine.py
+      - ./services/search-chat-service/chatbot_agent.py:/app/chatbot_agent.py
+      - ./services/search-chat-service/data_cronjob.py:/app/data_cronjob.py
+      - ./services/search-chat-service/ingest_data.py:/app/ingest_data.py
+    ports:
+      - "9400:5000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      ecommerce-service:
+        condition: service_started
+    networks:
+      - ecommerce-network
+    restart: on-failure
+
   # ==================== FRONTEND APPLICATIONS ====================
 
   # Ecommerce UI (Port 3000)
@@ -301,6 +361,8 @@ volumes:
   postgres_data:
     driver: local
   pgadmin_data:
+    driver: local
+  elasticsearch_data:
     driver: local
   kafka_data:
     driver: local
