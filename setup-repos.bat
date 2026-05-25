@@ -5,11 +5,12 @@ REM This script creates the folder structure and clones all microservice reposit
 REM =============================================================================
 
 REM FILL IN THESE REPOSITORY URLS
-REM Services (4 repositories)
+REM Services (5 repositories)
 set IDENTITY_SERVICE_REPO=git@github.com:HK251-DATN/identity-service.git
 set BACK_OFFICE_SERVICE_REPO=git@github.com:HK251-DATN/back-office-service.git
 set PRODUCT_STORAGE_SERVICE_REPO=git@github.com:HK251-DATN/product_storage_service.git
 set ECOMMERCE_SERVICE_REPO=git@github.com:HK251-DATN/ecommerce-temp.git
+set SEARCH_CHAT_SERVICE_REPO=git@github.com:HK251-DATN/recommend-feature.git
 
 REM Infrastructure (2 repositories)
 set DATABASE_INFRA_REPO=git@github.com:HK251-DATN/database_schema.git
@@ -37,23 +38,24 @@ echo.
 
 REM Clone services
 echo ==========================================
-echo Cloning Service Repositories (4/8)
+echo Cloning Service Repositories (5/9)
 echo ==========================================
 call :clone_repo "%IDENTITY_SERVICE_REPO%" "services\identity-service" "identity-service"
 call :clone_repo "%BACK_OFFICE_SERVICE_REPO%" "services\back-office-service" "back-office-service"
 call :clone_repo "%PRODUCT_STORAGE_SERVICE_REPO%" "services\product_storage_service" "product_storage_service"
 call :clone_repo "%ECOMMERCE_SERVICE_REPO%" "services\ecommerce-service" "ecommerce-service"
+call :clone_repo "%SEARCH_CHAT_SERVICE_REPO%" "services\search-chat-service" "search-chat-service"
 
 REM Clone infrastructure
 echo ==========================================
-echo Cloning Infrastructure Repositories (2/8)
+echo Cloning Infrastructure Repositories (2/9)
 echo ==========================================
 call :clone_repo "%DATABASE_INFRA_REPO%" "infrastructure\database" "database-infrastructure"
 call :clone_repo "%KAFKA_INFRA_REPO%" "infrastructure\kafka" "kafka-infrastructure"
 
 REM Clone frontend
 echo ==========================================
-echo Cloning Frontend Repositories (2/8)
+echo Cloning Frontend Repositories (3/9)
 echo ==========================================
 call :clone_repo "%FRONTEND_REPO_1%" "frontend\ecommerce-ui" "ecommerce-ui"
 call :clone_repo "%FRONTEND_REPO_2%" "frontend\back-office-ui" "back-office-ui"
