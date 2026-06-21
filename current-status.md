@@ -1,5 +1,5 @@
 # Project Status Report: FreshHarvest E-Commerce Platform
-**Generated:** April 21, 2026  
+**Generated:** May 14, 2026  
 **Project:** HK251-DAGD1-092 - E-Commerce Platform with Fresh Food Focus  
 **Team:** 2211694, 2211709, 2211876
 
@@ -7,163 +7,150 @@
 
 ## Executive Summary
 
-**Overall Completion: ~70-75%**
+**Overall Completion: ~82-85%**
 
-The project has successfully implemented core microservices architecture, authentication, and most business operations. However, several advanced features planned in the original specification remain incomplete or not started.
+Significant progress since the April 21 report. Three major additions have been integrated: a new **search-chat-service** (AI-powered chatbot and hybrid product search using Elasticsearch + Gemini), a new **provider-ui** (dedicated farmer/supplier portal), and a fully working **coupon and sale-event system**. The AI chatbot and recommendation system gaps from the previous report are now substantially addressed.
 
 ### Key Achievements ✅
-- ✅ Complete microservices architecture (4 services + 2 frontends)
+- ✅ Complete microservices architecture (5 services + 3 frontends)
 - ✅ Docker-based infrastructure with Kafka event streaming
 - ✅ Core CRUD operations for all major entities
-- ✅ Basic e-commerce flow (browse → cart → order → delivery)
+- ✅ Full e-commerce flow (browse → cart → coupon → order → payment → packaging → delivery)
 - ✅ Warehouse and inventory management system
 - ✅ Employee task interfaces (packaging & delivery)
 - ✅ RBAC-based access control
+- ✅ **NEW** AI-powered search & chatbot (search-chat-service with Gemini + Elasticsearch)
+- ✅ **NEW** Provider portal (provider-ui) with demand management and verification
+- ✅ **NEW** Coupon/voucher system (backend + frontend)
+- ✅ **NEW** Sale event management with product discounts and banners
+- ✅ **NEW** Provider verification system (certificates + video evidence)
+- ✅ **NEW** Raw product demand tracking (provider supply confirmation workflow)
+- ✅ **NEW** Product sub-batch system with delivery acceptance/rejection
 
-### Major Gaps ❌
-- ❌ AI Chatbot (not implemented)
-- ❌ Recommendation System (not implemented)
-- ❌ Blog/Content Management System (incomplete)
-- ❌ Customer reviews & ratings (not fully implemented)
+### Remaining Gaps ❌
+- ❌ Blog/Content Management System (not implemented)
+- ❌ Customer reviews UI (backend done, no UI to submit/view)
 - ❌ Business analytics dashboard (basic only)
-- ❌ Promotion/banner management (incomplete)
-- ❌ Demand tracking & supply confirmation (not implemented)
+- ❌ Customer support / live chat system (not implemented)
+- ❌ Push notifications for buyers
+- ❌ System monitoring dashboard
+- ❌ Wishlist (route exists but non-functional)
 
 ---
 
-## Detailed Analysis by Phase
+## Functional Requirements Coverage
 
-## Phase 1-2: Research & Architecture Design (Weeks 1-3)
-**Status: 100% COMPLETE ✅**
+### F-SYSTEM — All Stakeholders
 
-| Component | Status | Evidence |
-|-----------|--------|----------|
-| Requirements Analysis | ✅ DONE | 68 database entities, comprehensive ERD in PDF |
-| System Architecture | ✅ DONE | Microservices architecture with Kafka, Clean Architecture in ecommerce-service |
-| Technology Selection | ✅ DONE | React, Spring Boot, PostgreSQL, Kafka, Docker |
-| Use Case Design | ✅ DONE | 40+ use cases documented in PDF (UC_100-UC_260) |
-| ERD Design | ✅ DONE | Database schemas in all 4 services |
-| UI/UX Design | ✅ DONE | 80+ UI mockups in PDF |
+| ID | Requirement | Status | Notes |
+|----|-------------|--------|-------|
+| **F-SYSTEM-0** | Authentication via email/password or Google | ✅ DONE | OAuth2 + JWT in identity-service & ecommerce-service |
+| **F-SYSTEM-1** | Guest can view products (price, description, reviews) | ✅ DONE | Public product endpoints in ecommerce-service |
+| **F-SYSTEM-2** | Guest can search products by keyword | ✅ DONE | search-chat-service: BM25, vector, hybrid search |
+| **F-SYSTEM-3** | Guest can filter products by criteria/category | ✅ DONE | ProductSearchController with category filters |
+| **F-SYSTEM-4** | System suggests products, recipes, and combos | ⚠️ PARTIAL | Product suggestion via chatbot done; recipe/combo feature missing |
+| **F-SYSTEM-5** | Guest can view blog/news/cooking tips | ❌ NOT DONE | No blog entities or CMS implemented |
 
----
+### F-PROVIDER — Supplier (Hộ kinh doanh cá thể)
 
-## Phase 3: Implementation (Weeks 3-16)
+| ID | Requirement | Status | Notes |
+|----|-------------|--------|-------|
+| **F-PROVIDER-0** | Provider views next-day product demand | ✅ DONE | provider-ui `/nhu-cau` page; demand.service.ts fetches demands |
+| **F-PROVIDER-1** | Provider confirms supply quantity and delivery time | ✅ DONE | Confirm demand delivery endpoint + UI in provider-ui |
+| **F-PROVIDER-2** | Provider views transaction history with company | ✅ DONE | provider-ui `/giao-dich` page |
+| **F-PROVIDER-3** | Communication channel between business and buyers | ❌ NOT DONE | No messaging/ticket system |
+| **F-PROVIDER-4** | Provider can post articles (if granted permission) | ❌ NOT DONE | No blog/article system |
 
-### 3.1 Foundation Modules (Target: Before Mid-Feb 2026)
-**Status: 95% COMPLETE ✅**
+### F-ENTERPRISE — Enterprise/Seller
 
-| Feature | Use Case | Backend | Frontend | Status | Notes |
-|---------|----------|---------|----------|--------|-------|
-| Login/Authentication | UC_200 | ✅ | ✅ | **DONE** | JWT-based auth in identity-service & ecommerce-service |
-| RBAC System | - | ✅ | ✅ | **DONE** | Group/Permission tables, ProtectedRoute components |
-| Personal Info Management | UC_201 | ✅ | ⚠️ | **PARTIAL** | Backend exists, frontend limited |
-| Password Change | - | ✅ | ⚠️ | **PARTIAL** | API exists, UI incomplete |
+| ID | Requirement | Status | Notes |
+|----|-------------|--------|-------|
+| **F-ENTERPRISE-0** | Enterprise can create products with detailed info | ✅ DONE | ProductGeneralController (back-office), image upload via R2 |
+| **F-ENTERPRISE-1** | Enterprise can edit their listed products | ✅ DONE | Full product edit in back-office |
+| **F-ENTERPRISE-2** | Enterprise can delete their products | ✅ DONE | Product delete endpoint |
+| **F-ENTERPRISE-3** | Dashboard with charts for business analytics | ⚠️ PARTIAL | Basic dashboard (revenue, orders, best sellers); no trends |
+| **F-ENTERPRISE-4** | Enterprise can create staff accounts | ✅ DONE | EmployeeController + identity-service |
+| **F-ENTERPRISE-5** | Banner display for product promotion | ⚠️ PARTIAL | SaleEvent supports banner images via R2; no dedicated banner mgmt |
+| **F-ENTERPRISE-6** | Enterprise can post articles (if granted) | ❌ NOT DONE | No blog/article system |
 
-**Completion: 95%** (Core auth works, some UX polish needed)
+### F-BUYER — Customer
 
----
+| ID | Requirement | Status | Notes |
+|----|-------------|--------|-------|
+| **F-BUYER-0** | Buyer can update personal info (name, phone, address) | ✅ DONE | Profile + AddressController |
+| **F-BUYER-1** | Save to wishlist or add to cart | ⚠️ PARTIAL | Cart fully done; wishlist route exists but non-functional |
+| **F-BUYER-2** | Confirm purchase from cart | ✅ DONE | OrderController with full checkout flow |
+| **F-BUYER-3** | Select or add delivery address and preferred time | ⚠️ PARTIAL | Address selection done; delivery time preference not implemented |
+| **F-BUYER-4** | Choose payment method (prepaid or COD) | ✅ DONE | COD + VNPay QR payment with Sepay integration |
+| **F-BUYER-5** | Leave product reviews and ratings | ⚠️ PARTIAL | FeedBackController done; no UI to submit or display reviews |
+| **F-BUYER-6** | Send questions via integrated chat | ❌ NOT DONE | No chat widget or customer support system |
+| **F-BUYER-7** | Real-time order status tracking | ⚠️ PARTIAL | Backend order status flow complete; customer UI basic |
+| **F-BUYER-8** | Push notifications (orders, promotions, new products) | ❌ NOT DONE | No notification system |
+| **F-BUYER-9** | View order history and download invoice | ⚠️ PARTIAL | Order history in profile done; no invoice download/PDF |
+| **F-BUYER-10** | Apply discount codes/vouchers at checkout | ✅ DONE | Full coupon system: CouponController + checkout UI |
+| **F-BUYER-11** | Recipe suggestions with ingredient combos | ❌ NOT DONE | Chatbot handles product search, not recipe/combo suggestions |
+| **F-BUYER-12** | View and interact with articles/cooking tips | ❌ NOT DONE | No blog/CMS implemented |
 
-### 3.2 Core Business Modules
-**Status: 85% COMPLETE ✅**
+### F-MANAGER — Management Team
 
-#### Product Management
-| Feature | Use Case | Backend | Frontend | Status | Notes |
-|---------|----------|---------|----------|--------|-------|
-| Product General CRUD | UC_140 | ✅ | ✅ | **DONE** | ProductGeneralController in back-office & storage services |
-| Product Detail Management | - | ✅ | ✅ | **DONE** | Batch processing with unit conversion |
-| Product Batch Management | - | ✅ | ✅ | **DONE** | Complete batch-to-detail workflow |
-| Category Management (3-tier) | - | ✅ | ✅ | **DONE** | Category → Subcategory → SubSubcategory |
-| Product Search | - | ✅ | ✅ | **DONE** | SearchUseCase in ecommerce-service |
-| Product Images (R2) | - | ✅ | ✅ | **DONE** | Cloudflare R2 integration |
+| ID | Requirement | Status | Notes |
+|----|-------------|--------|-------|
+| **F-MANAGER-0** | Manager can create staff accounts | ✅ DONE | EmployeeController + UserController |
+| **F-MANAGER-1** | Manager can edit or delete staff accounts | ✅ DONE | Full employee CRUD |
+| **F-MANAGER-2** | Manager can assign roles to staff | ✅ DONE | Group/Permission RBAC in identity-service |
+| **F-MANAGER-3** | Monitor staff via activity log and task progress | ⚠️ PARTIAL | Task progress via packaging/delivery interfaces; no audit log |
+| **F-MANAGER-4** | Send notifications to staff (individual/group/all) | ❌ NOT DONE | No notification system |
+| **F-MANAGER-5** | Manager can create buyer accounts | ✅ DONE | UserController |
+| **F-MANAGER-6** | Manager can edit or delete buyer accounts | ✅ DONE | BuyerController with full CRUD |
+| **F-MANAGER-7** | Manager can disable or block accounts | ✅ DONE | Account status management in back-office |
+| **F-MANAGER-8** | Manager can restore restricted accounts | ✅ DONE | Re-enable account endpoint |
+| **F-MANAGER-9** | Manager can grant permissions (post products, ads, articles) | ✅ DONE | RBAC permission granting via group assignment |
+| **F-MANAGER-10** | Manager can verify provider certificates | ✅ DONE | ProviderCertificateController + ProviderVerificationVideoController with approve/reject |
 
-**Product Management Completion: 100%** ✅
+### F-WAREHOUSE — Warehouse Staff
 
-#### Shopping & Orders
-| Feature | Use Case | Backend | Frontend | Status | Notes |
-|---------|----------|---------|----------|--------|-------|
-| Shopping Cart | - | ✅ | ✅ | **DONE** | Cart & CartItem entities, full CRUD |
-| Cart Item Management | - | ✅ | ✅ | **DONE** | Add/update/remove items |
-| Order Placement | - | ✅ | ✅ | **DONE** | OrderController with status flow |
-| Order Confirmation | - | ✅ | ✅ | **DONE** | PENDING → CONFIRMED status |
-| Payment Processing | - | ✅ | ✅ | **DONE** | VNPay integration, polling endpoint |
-| Order Tracking | - | ✅ | ⚠️ | **PARTIAL** | Backend complete, limited customer UI |
-| Delivery Address | - | ✅ | ✅ | **DONE** | AddressController, multiple addresses per buyer |
+| ID | Requirement | Status | Notes |
+|----|-------------|--------|-------|
+| **F-WAREHOUSE-0** | Visual warehouse management dashboard | ✅ DONE | ManageWarehouse tab in back-office-ui (3 tabs: warehouse, storage tools, batches) |
+| **F-WAREHOUSE-1** | Alerts for near-expiry products | ❌ NOT DONE | SubSubcategory has avg_shelf_days but no alert logic |
+| **F-WAREHOUSE-2** | Auto-update inventory on receipt/dispatch | ✅ DONE | Kafka-driven sync: order-item-events → stock reduction |
+| **F-WAREHOUSE-3** | Classify products by multiple criteria | ✅ DONE | Batch management with type, date, status filters |
+| **F-WAREHOUSE-4** | Export inventory reports by day/week/month | ❌ NOT DONE | No export functionality |
+| **F-WAREHOUSE-5** | Manage product storage locations in warehouse | ✅ DONE | StorageTool, Rack, RackLevel, Fridge entities; pick-list linking |
 
-**Shopping & Orders Completion: 95%** ✅
+### F-PACKAGE — Packaging Staff
 
-#### Warehouse & Logistics
-| Feature | Use Case | Backend | Frontend | Status | Notes |
-|---------|----------|---------|----------|--------|-------|
-| Warehouse Management | - | ✅ | ✅ | **DONE** | Warehouse CRUD with capacity tracking |
-| Storage Tools (Rack/Fridge) | - | ✅ | ✅ | **DONE** | StorageTool, Rack, Fridge, RackLevel entities |
-| Inventory Management | UC_220 | ✅ | ✅ | **DONE** | ProductDetail tracking per storage location |
-| Expiration Alerts | UC_221 | ❌ | ❌ | **NOT DONE** | No expiration tracking logic found |
-| Packaging Tasks | UC_240 | ✅ | ✅ | **DONE** | Complete packaging employee interface |
-| Delivery Tasks | UC_230 | ✅ | ✅ | **DONE** | Complete delivery employee interface |
-| Pick List Management | - | ✅ | ✅ | **DONE** | Pick list generation and product linking |
+| ID | Requirement | Status | Notes |
+|----|-------------|--------|-------|
+| **F-PACKAGE-0** | View order list with product detail, quantity, deadline | ✅ DONE | PackagingEmployee UI with order/task tables |
+| **F-PACKAGE-2** | Print shipping labels, suggest packaging materials | ⚠️ PARTIAL | Order info displayed; no label printing or material suggestion |
+| **F-PACKAGE-3** | Confirmation prompts to prevent packaging errors | ✅ DONE | QualityCheck step with confirmations |
 
-**Warehouse & Logistics Completion: 85%** (Missing expiration alerts)
+### F-DELIVERY — Delivery Staff
 
-#### Employee & Customer Management
-| Feature | Use Case | Backend | Frontend | Status | Notes |
-|---------|----------|---------|----------|--------|-------|
-| Employee Management | UC_142, UC_260 | ✅ | ✅ | **DONE** | Full CRUD with status tracking |
-| Employee Task Assignment | - | ✅ | ✅ | **DONE** | Packaging & delivery task assignment |
-| Customer/Buyer Management | - | ✅ | ✅ | **DONE** | Buyer CRUD, contact info |
-| Customer Support | UC_210 | ❌ | ❌ | **NOT DONE** | No ticket/support system found |
+| ID | Requirement | Status | Notes |
+|----|-------------|--------|-------|
+| **F-DELIVERY-0** | Route management and optimization tools | ⚠️ PARTIAL | Delivery interface exists; no route optimization |
+| **F-DELIVERY-1** | Sort and prioritize orders by customer deadline | ✅ DONE | Delivery task list with time-based sorting |
+| **F-DELIVERY-2** | Real-time delivery status tracking and update | ✅ DONE | Delivery employee can update order status live |
 
-**Employee & Customer Completion: 75%** (Missing customer support system)
+### F-BUSINESS — Content & Business Operations Staff
 
----
+| ID | Requirement | Status | Notes |
+|----|-------------|--------|-------|
+| **F-BUSINESS-0** | Create and manage products with full info on platform | ✅ DONE | ProductGeneralController in back-office |
+| **F-BUSINESS-1** | Create, edit, and classify product categories | ✅ DONE | 3-tier CategoryController; ManageCategory UI |
+| **F-BUSINESS-2** | Marketing and promotion tools | ⚠️ PARTIAL | Sale events + coupons done; no dedicated banner/ad management |
+| **F-BUSINESS-3** | Customer support: receive and handle feedback | ❌ NOT DONE | No support ticket system |
+| **F-BUSINESS-4** | Revenue and traffic statistics reports | ⚠️ PARTIAL | Basic dashboard; no detailed analytics or trends |
+| **F-BUSINESS-5** | Manage promotions and discounts by customer group | ⚠️ PARTIAL | Coupon and sale events done; no customer-group targeting |
+| **F-BUSINESS-6** | Manage and moderate provider posts and ads | ❌ NOT DONE | No blog/ad moderation system |
 
-### 3.3 Advanced Modules (Target: By March 3/2026)
-**Status: 5% COMPLETE ❌**
+### F-TECH — Technical & System Administration
 
-| Feature | Use Case | Backend | Frontend | Status | Notes |
-|---------|----------|---------|----------|--------|-------|
-| **Recommendation System** | - | ❌ | ❌ | **NOT DONE** | No recommendation logic found |
-| **AI Chatbot** | - | ❌ | ❌ | **NOT DONE** | Not implemented |
-| Product Reviews & Ratings | UC_143, UC_213 | ⚠️ | ❌ | **PARTIAL** | FeedBackController exists but incomplete |
-| Sale Events | - | ✅ | ⚠️ | **PARTIAL** | Backend done, frontend incomplete |
-| Coupon System | - | ✅ | ⚠️ | **PARTIAL** | CouponPolicyController exists, UI limited |
-
-**Advanced Modules Completion: 5%** ❌  
-**Critical Gap:** The two major advanced features (AI Chatbot & Recommendation System) planned for completion by March 3/2026 are not implemented.
-
----
-
-### 3.4 Business Management & Analytics
-**Status: 50% COMPLETE ⚠️**
-
-| Feature | Use Case | Backend | Frontend | Status | Notes |
-|---------|----------|---------|----------|--------|-------|
-| Business Statistics | UC_120, UC_211 | ⚠️ | ⚠️ | **PARTIAL** | Basic dashboard exists, limited analytics |
-| Transaction History | UC_121 | ✅ | ⚠️ | **PARTIAL** | OrderController tracks orders, limited UI |
-| Blog/Post Management | UC_122, UC_212 | ❌ | ❌ | **NOT DONE** | ManageContent component is placeholder |
-| Banner/Promotion Mgmt | UC_141 | ❌ | ❌ | **NOT DONE** | Not found in codebase |
-| Product Demand Tracking | UC_130 | ❌ | ❌ | **NOT DONE** | DemandResponseController incomplete |
-| Supply Confirmation | UC_131 | ⚠️ | ❌ | **PARTIAL** | DemandResponse entity exists, no workflow |
-| System Monitoring | UC_250 | ❌ | ❌ | **NOT DONE** | No monitoring dashboard |
-| Content Management | - | ❌ | ❌ | **NOT DONE** | No CMS implementation |
-
-**Business Management Completion: 50%** ⚠️
-
----
-
-## Phase 4: Testing & Completion (Weeks 16-18)
-**Status: NOT STARTED ❌**
-
-| Activity | Status | Notes |
-|----------|--------|-------|
-| Functional Testing | ❌ | No test cases found beyond basic Spring Boot tests |
-| Integration Testing | ❌ | No integration test suites |
-| Regression Testing | ❌ | Not started |
-| UAT/UX Testing | ❌ | No UAT documentation |
-| Performance Evaluation | ❌ | No performance testing |
-| Load Testing | ❌ | Not implemented |
-| Security Testing | ❌ | No security audit |
-
-**Testing Phase Completion: 0%** ❌
+| ID | Requirement | Status | Notes |
+|----|-------------|--------|-------|
+| **F-TECH-0** | Monitoring and alerting tools for incident detection | ❌ NOT DONE | No monitoring dashboard; Spring Boot actuator endpoints available but not surfaced in UI |
 
 ---
 
@@ -174,397 +161,228 @@ The project has successfully implemented core microservices architecture, authen
 #### 1. Identity Service (Port 9000)
 **Completion: 90%** ✅
 - ✅ User authentication (OAuth2 + JWT)
-- ✅ User management
+- ✅ User management (CRUD)
 - ✅ Group/Permission RBAC
 - ✅ Avatar storage (Cloudflare R2)
+- ✅ Provider registration endpoint (`/api/user/provider-register`)
 - ⚠️ Missing: Password reset flow, email verification
 
 #### 2. Back-Office Service (Port 9100)
-**Completion: 75%** ⚠️
+**Completion: 85%** ✅
 - ✅ Product catalog management
 - ✅ Category hierarchy (3-layer)
-- ✅ Provider management
+- ✅ Provider management with certificate & video verification
 - ✅ Employee management
 - ✅ Buyer management
-- ✅ Event management
-- ✅ Payment methods
-- ⚠️ PreorderPolicy exists but unused
-- ⚠️ CouponPolicy basic implementation
-- ❌ DemandResponse workflow incomplete
-- ❌ No content/blog management
+- ✅ Sale event management (loopable events)
+- ✅ Coupon policy management
+- ✅ Demand response tracking (DemandResponseController)
+- ✅ Payment methods (COD, bank transfer)
+- ✅ Kafka: publishes `category-events`, `product-general-events`, `order-delivering-events`, `order-delivered-events`
+- ⚠️ PreorderPolicy exists but workflow incomplete
+- ❌ No blog/content management
 
 #### 3. Product Storage Service (Port 9200)
 **Completion: 95%** ✅
 - ✅ Warehouse management
-- ✅ Storage tools (Rack/Fridge)
-- ✅ Product batch processing
-- ✅ Unit conversion (mass/volume)
-- ✅ Pick list generation
-- ✅ Kafka event consumption
-- ⚠️ Missing: Expiration date alerts
+- ✅ Storage tools (Rack/RackLevel/Fridge)
+- ✅ Product batch processing with unit conversion (mass/volume)
+- ✅ Batch processing V2: auto-detects CERTIFICATE vs VIDEO verification type
+- ✅ ProductSubBatch system for pooled provider deliveries
+- ✅ Delivery acceptance/rejection with video proof uploads
+- ✅ Pick list generation and product-to-order-item linking
+- ✅ Raw product demand management (RawProductDemandController)
+- ✅ Kafka event consumption and publishing
+- ⚠️ Missing: Expiration date alerts (avg_shelf_days tracked but no alert trigger)
+- ❌ No inventory export reports
 
-#### 4. Ecommerce Service (Port 9301)
-**Completion: 85%** ✅
+#### 4. Ecommerce Service (Port 9300)
+**Completion: 88%** ✅
 - ✅ Clean Architecture implementation
-- ✅ Shopping cart
-- ✅ Order processing
-- ✅ Payment integration (VNPay)
-- ✅ Product search
-- ✅ Category browsing
-- ✅ Sale events
+- ✅ Shopping cart management
+- ✅ Full order lifecycle (PENDING → PAID → CONFIRMED → DELIVERING → DELIVERED → RECEIVED)
+- ✅ VNPay QR payment with Sepay + Google Sheets polling (10s intervals, deduplication)
+- ✅ COD payment
+- ✅ Coupon system (code-based, PERCENTAGE/FIXED_AMOUNT, usage limits, min order, expiry)
+- ✅ Sale events with product discounts and banner images
+- ✅ Product search (keyword, category, filtering)
+- ✅ FeedbackController (backend CRUD)
 - ✅ Data seeder (Vietnamese sample data)
-- ⚠️ Feedback system incomplete
+- ⚠️ Feedback has no customer-facing UI
 - ❌ No recommendation engine
-- ❌ No chatbot integration
+- ❌ No chatbot integration in this service (handled by search-chat-service separately)
+
+#### 5. Search-Chat Service (Port 5000) — NEW
+**Completion: 85%** ✅
+- ✅ Flask REST API with CORS
+- ✅ Elasticsearch backend with `products_index` (product_name, description, tags, category, embedding)
+- ✅ BM25 keyword search (`GET /api/search/keyword`)
+- ✅ k-NN vector search with 384-dim embeddings, model: `all-MiniLM-L6-v2` (`GET /api/search/vector`)
+- ✅ Hybrid search combining keyword + vector (`GET /api/search/hybrid`)
+- ✅ AI chatbot endpoint (`POST /api/chat`) using Google Gemini 1.5 Flash: extracts keywords, returns matching products + natural language response
+- ✅ Product data ingestion from PostgreSQL to Elasticsearch (`data_cronjob.py`, `ingest_data.py`)
+- ✅ Docker Compose for Elasticsearch + Flask
+- ⚠️ No integration confirmed with ecommerce-ui or back-office-ui frontend yet
+- ⚠️ No scheduled re-indexing / live sync with product database changes
 
 ---
 
 ### Frontend Applications
 
 #### 1. Back-Office UI (React + Ant Design + MUI)
+**Completion: 88%** ✅
+
+| Page | Status | Notes |
+|------|--------|-------|
+| `/login` | ✅ DONE | |
+| `/dashboard` | ⚠️ PARTIAL | Revenue/orders/best-sellers; no trend charts |
+| `/manage-employee` | ✅ DONE | Full CRUD |
+| `/manage-customer` | ✅ DONE | Buyer table with status and contact |
+| `/manage-product` | ✅ DONE | Product general management |
+| `/manage-category` | ✅ DONE | 3-tier category management |
+| `/manage-warehouse` | ✅ DONE | Warehouse, storage tools, batches (3 tabs) |
+| `/manage-packaging` | ✅ DONE | Packaging task management |
+| `/packaging/employee` | ✅ DONE | Employee packaging interface (mobile-optimized) |
+| `/manage-shipping` | ✅ DONE | Delivery management |
+| `/delivery/employee` | ✅ DONE | Delivery employee interface (mobile-optimized) |
+| `/manage-order` | ✅ DONE | Order confirmation and tracking |
+| `/manage-sale-event` | ✅ DONE | Sale campaign creation, product linking, banners |
+| `/manage-coupon` | ✅ DONE | **NEW** — Coupon CRUD with form modal |
+| `/manage-provider` | ✅ DONE | **NEW** — Provider verification review (certs, videos, approve/reject) |
+| `/manage-raw-product-demand` | ✅ DONE | **NEW** — Demand tracking; sub-batch acceptance modal |
+| `/manage-content` | ❌ PLACEHOLDER | ManageContent component is empty |
+| `/system-setting` | ❌ INCOMPLETE | Not functional |
+
+**Missing:**
+- ❌ Business analytics (revenue trends, demand forecasting, supplier metrics)
+- ❌ Banner/ad management (separate from sale events)
+- ❌ Blog/content management system
+- ❌ Customer support ticket UI
+- ❌ System monitoring dashboard
+- ❌ Export functionality (PDF/Excel)
+
+#### 2. Provider UI (React + TypeScript + Ant Design) — NEW
 **Completion: 80%** ✅
 
-**Implemented Pages:**
-- ✅ `/login` - Login page
-- ✅ `/dashboard` - Summary dashboard (revenue, orders, best sellers)
-- ✅ `/manage-employee` - Employee CRUD
-- ✅ `/manage-customer` - Customer/buyer CRUD
-- ✅ `/manage-product` - Product general management
-- ✅ `/manage-category` - 3-tier category management
-- ✅ `/manage-warehouse` - Warehouse, storage tools, batches (3 tabs)
-- ✅ `/manage-packaging` - Packaging task management (manager view)
-- ✅ `/manage-shipping` - Delivery management
-- ✅ `/manage-order` - Order confirmation & tracking
-- ✅ `/packaging/employee` - Packaging employee interface (mobile-optimized)
-- ✅ `/delivery/employee` - Delivery employee interface (mobile-optimized)
-- ⚠️ `/manage-content` - Placeholder only
-- ⚠️ `/manage-sale-event` - Basic implementation
-- ⚠️ `/system-setting` - Incomplete
+| Page | Status | Notes |
+|------|--------|-------|
+| `/login` | ✅ DONE | JWT-based, token stored in localStorage |
+| `/register` | ✅ DONE | New provider registration |
+| `/become-provider` | ✅ DONE | Onboarding: personal info + bank account linking |
+| `/upload-evidence` | ✅ DONE | Multi-step: certificate upload + video upload with progress |
+| `/my-submissions` | ✅ DONE | View submitted certs/videos and review status |
+| `/dashboard` | ✅ DONE | Home for verified providers |
+| `/nhu-cau` | ✅ DONE | View buyer demands; confirm delivery qty and time |
+| `/giao-dich` | ✅ DONE | Transaction history with company |
+| `/profile` | ✅ DONE | Provider profile settings |
+| `/provider-check` | ✅ DONE | Redirect guard: check if user has provider account |
+| `/account-suspended` | ✅ DONE | Suspension notice page |
 
-**Missing Features:**
-- ❌ Business analytics (revenue trends, product demand, supplier analytics)
-- ❌ Banner/promotion management
-- ❌ Blog/content management system
-- ❌ Customer support ticket system
-- ❌ System monitoring dashboard
-- ❌ Advanced search & filters in most tables
-- ❌ Export functionality (PDF/Excel reports)
+**Covers requirements:** F-PROVIDER-0 ✅, F-PROVIDER-1 ✅, F-PROVIDER-2 ✅
 
-**UI Components:** 329 React components  
-**API Services:** 15+ service files with axios integration
+**Missing:**
+- ❌ F-PROVIDER-3: No messaging/chat with buyers
+- ❌ F-PROVIDER-4: No article/post feature
 
-#### 2. Ecommerce UI (React + Tailwind)
-**Completion: 70%** ⚠️
+#### 3. Ecommerce UI (React + Vite)
+**Completion: 72%** ⚠️
 
-**Implemented Pages:**
-- ✅ `/` - Homepage with product recommendations
-- ✅ `/category/:id` - Category product listing
-- ✅ `/product/:id` - Product detail page (3 versions!)
-- ✅ `/cart` - Shopping cart
-- ✅ `/ordering` - Checkout/order placement
-- ✅ `/payment-success` - Payment confirmation
-- ✅ `/login` - User login
-- ✅ `/signup` - User registration
-- ✅ `/contact` - Contact page
-- ⚠️ `/user/profile` - User profile (basic)
-- ⚠️ `/user/order` - Order history (basic)
-- ⚠️ `/user/address` - Address management (basic)
-- ⚠️ `/user/wishlist` - Wishlist (incomplete)
-- ⚠️ `/user/voucher` - Voucher management (incomplete)
-- ⚠️ `/user/farm` - Farm page (unclear purpose, incomplete)
+| Page | Status | Notes |
+|------|--------|-------|
+| `/` | ✅ DONE | Homepage with hero, categories, benefits sections |
+| `/category/:id` | ✅ DONE | Product listing with filters and sort |
+| `/product/:id` | ✅ DONE | Product detail (multiple versions) |
+| `/cart` | ✅ DONE | Cart management |
+| `/ordering` | ✅ DONE | Checkout with address, payment, coupon application |
+| `/payment-success` | ✅ DONE | VNPay/COD confirmation |
+| `/login` | ✅ DONE | |
+| `/signup` | ✅ DONE | |
+| `/contact` | ✅ DONE | |
+| `/user/profile` | ✅ DONE | Account info |
+| `/user/order` | ✅ DONE | Order history with detail view |
+| `/user/address` | ✅ DONE | Address management |
+| `/user/voucher` | ⚠️ PARTIAL | Voucher section exists; limited functionality |
+| `/user/wishlist` | ❌ INCOMPLETE | Route exists; empty implementation |
+| `/user/farm` | ❌ UNCLEAR | Unclear purpose; incomplete |
 
-**Missing Features:**
-- ❌ Product reviews & ratings (no UI for submitting/viewing)
-- ❌ Blog/article listing & reading
-- ❌ Live chat/chatbot widget
-- ❌ Recommendation sections (no personalization)
-- ❌ Product comparison
-- ❌ Wishlist functionality (route exists but empty)
-- ❌ Loyalty program / membership tiers
-- ❌ Order tracking interface for customers
-
----
-
-## Database Schema Coverage
-
-### Entities Analysis
-**Total Entities Implemented: 68**
-
-**Identity Service (9 entities):**
-- User, Group, Permission, UserGroup, GroupPermission, etc.
-- **Status:** Complete ✅
-
-**Back-Office Service (25+ entities):**
-- ProductGeneral, Category, Subcategory, SubSubcategory
-- Provider, EnterpriseStore, Employee, Buyer
-- Event, CouponPolicy, PreorderPolicy, PaymentMethod
-- Order, DemandResponse, etc.
-- **Status:** 90% complete ⚠️ (Some entities defined but workflows incomplete)
-
-**Product Storage Service (15+ entities):**
-- Warehouse, StorageTool, Rack, RackLevel, Fridge
-- ProductBatch, ProductDetail, PickList, etc.
-- **Status:** 95% complete ✅
-
-**Ecommerce Service (20+ entities):**
-- Buyer, Address, Cart, CartItem
-- Order, OrderItem, SaleEvent, SaleProduct
-- ProductGeneral, ProductDetail, BatchDetail
-- Category, Feedback, etc.
-- **Status:** 85% complete ✅
+**Missing:**
+- ❌ Product reviews/ratings UI (submit & display)
+- ❌ Blog/article pages
+- ❌ Real-time order tracking map/timeline
+- ❌ Push notifications
+- ❌ Invoice PDF download
+- ❌ Recipe/ingredient combo suggestions (F-BUYER-11)
+- ❌ search-chat-service chatbot widget not integrated in UI
 
 ---
 
 ## Infrastructure & DevOps
-**Status: 90% COMPLETE ✅**
+**Status: 90%** ✅
 
 | Component | Status | Notes |
 |-----------|--------|-------|
-| Docker Compose Setup | ✅ | Complete orchestration for all services |
-| PostgreSQL (4 databases) | ✅ | Multi-database setup with init scripts |
-| Kafka + Zookeeper | ✅ | Event streaming with 8+ topics |
-| Kafka UI | ✅ | Management interface on port 9280 |
-| Cloudflare R2 Integration | ✅ | File storage for avatars & product images |
+| Docker Compose Setup | ✅ | Orchestrates all 5 services + 3 frontends |
+| PostgreSQL (4 databases) | ✅ | Multi-database with init scripts |
+| Kafka + KRaft | ✅ | Kafka 4.2.0, 8+ topics, no Zookeeper |
+| Kafka UI | ✅ | Port 9280 |
+| Elasticsearch (search-chat) | ✅ | Docker Compose in search-chat-service |
+| Cloudflare R2 Integration | ✅ | 4 buckets: user avatars, product images, provider certs, provider videos |
 | Service Scripts | ✅ | `start.sh`, `service.sh`, `build-local.sh` |
-| Environment Configuration | ✅ | `.env.example` templates for all services |
-| Repository Setup Scripts | ✅ | `setup-repos.sh` for monorepo cloning |
+| Environment Configuration | ✅ | `.env.example` in all services |
+| Repository Setup | ✅ | `setup-repos.sh` for monorepo cloning |
 | CI/CD Pipeline | ❌ | Not implemented |
-| Cloud Deployment | ❌ | Only local Docker setup |
+| Cloud Deployment | ❌ | Local Docker only |
+| Monitoring (Prometheus/Grafana) | ❌ | Not implemented |
 
 ---
 
-## What Was NOT Implemented
+## What Is Still NOT Implemented
 
-### Critical Missing Features
+### 1. Blog / Content Management ❌
+- No article/blog entities in any database
+- ManageContent page is an empty placeholder
+- No customer-facing blog pages
 
-#### 1. AI/ML Features (Planned for March 3/2026) ❌
-- **AI Chatbot** - No implementation found
-  - No chatbot UI widget
-  - No chatbot backend service
-  - No integration with AI providers (OpenAI, etc.)
+### 2. Customer Reviews UI ⚠️
+- FeedBackController is complete in ecommerce-service
+- **No UI** for customers to submit or read reviews
+- No moderation/approval workflow
 
-- **Recommendation System** - No implementation found
-  - No recommendation algorithm
-  - No user behavior tracking
-  - No "Recommended for you" sections
-  - Product suggestions are static/random
+### 3. Customer Support System ❌
+- No ticket creation, tracking, or assignment
+- No live chat widget for buyers or chat with company
+- Covers F-BUYER-6, F-BUSINESS-3
 
-#### 2. Content Management System ❌
-- **Blog/Article Management (UC_122, UC_212)** - Placeholder only
-  - ManageContent component exists but empty
-  - No blog entities in database
-  - No article CRUD operations
-  - No blog display on customer frontend
+### 4. Push Notifications ❌
+- No notification system (covers F-BUYER-8, F-MANAGER-4)
 
-- **Comment System** - Not implemented
-  - No blog comments
-  - No discussion features
+### 5. search-chat-service UI Integration ⚠️
+- Service is fully functional as a standalone API
+- Not yet integrated into ecommerce-ui as a chatbot widget
+- No "recommended products" section driven by the AI service
 
-#### 3. Reviews & Ratings ⚠️
-- **Product Reviews (UC_143, UC_213)** - Partially implemented
-  - FeedbackController exists in ecommerce-service
-  - Feedback entity exists
-  - **BUT:** No UI for customers to submit reviews
-  - **BUT:** No UI to display reviews on product pages
-  - **BUT:** No moderation/approval workflow
+### 6. Business Analytics ⚠️
+- Dashboard shows revenue, orders, best sellers
+- Missing: revenue trends over time, inventory turnover, customer behavior, supplier performance, profit margins
 
-#### 4. Advanced Business Features ❌
-- **Product Demand Tracking (UC_130)** - Not implemented
-  - DemandResponse entity exists but unused
-  - No supplier demand notification system
-  - No demand forecasting
+### 7. Expiration Date Alerts ❌
+- avg_shelf_days tracked on SubSubcategory
+- No alert trigger or notification when products approach expiry
+- Covers F-WAREHOUSE-1
 
-- **Supply Confirmation (UC_131)** - Not implemented
-  - No workflow for suppliers to confirm capacity
-  - No supply capability forms
+### 8. Inventory Export Reports ❌
+- No PDF/Excel export for any report
+- Covers F-WAREHOUSE-4
 
-- **Banner/Promotion Management (UC_141)** - Not implemented
-  - No banner upload interface
-  - No banner display system
-  - Limited promotion management
+### 9. Wishlist (F-BUYER-1) ❌
+- Route `/user/wishlist` exists in ecommerce-ui
+- No actual implementation
 
-- **Business Analytics Dashboard** - Very basic
-  - Only shows revenue, order count, best sellers
-  - No trend analysis
-  - No customer behavior analytics
-  - No supplier performance metrics
-  - No inventory turnover reports
-  - No profit margin analysis
+### 10. Recipe / Combo Suggestions (F-BUYER-11) ❌
+- Chatbot does product search but not recipe-based ingredient suggestions
 
-#### 5. Customer Support System (UC_210) ❌
-- **Support Tickets** - Not implemented
-  - No ticket creation interface
-  - No ticket tracking system
-  - No agent assignment
-  - No ticket status workflow
-
-#### 6. System Monitoring (UC_250) ❌
-- **Technical Monitoring** - Not implemented
-  - No server metrics dashboard
-  - No API performance tracking
-  - No error logging dashboard
-  - No service health checks UI
-
-#### 7. Advanced E-commerce Features ❌
-- **Wishlist** - Route exists but non-functional
-- **Product Comparison** - Not implemented
-- **Loyalty/Membership Program** - Basic MembershipLevel enum exists but no implementation
-- **Subscription/Recurring Orders** - Not implemented
-- **Gift Cards/Vouchers** - Basic CouponPolicy exists but incomplete
-- **Order Cancellation** - No cancel workflow
-- **Return/Refund Management** - Not implemented
-
-#### 8. Reporting & Exports ❌
-- **PDF Reports** - Mentioned in UC specs but not implemented
-- **Excel Exports** - Mentioned in UC specs but not implemented
-- **Transaction Reports** - Basic data exists but no export functionality
-
-#### 9. Mobile App ❌
-- **React Native/Flutter App** - Not started
-  - Mentioned in "Future Development" section of PDF
-  - Would enhance farmer and customer mobile experience
-
-#### 10. Cloud Deployment ❌
-- **AWS/Google Cloud** - Not implemented
-  - Infrastructure exists only for local Docker
-  - No production deployment configuration
-
----
-
-## Testing Coverage
-
-### Unit Tests
-- **Identity Service:** Basic Spring Boot test skeleton only
-- **Back-Office Service:** Basic test skeleton only
-- **Product Storage Service:** Basic test skeleton only
-- **Ecommerce Service:** No tests found
-- **Frontend (both apps):** No test configuration
-
-**Estimated Test Coverage: < 5%** ❌
-
-### Integration Tests
-- **API Integration Tests:** None found
-- **End-to-End Tests:** None found
-- **Kafka Event Tests:** None found
-
-**Integration Test Coverage: 0%** ❌
-
----
-
-## Code Quality Issues
-
-### Backend
-1. **Inconsistent Spring Boot Versions:**
-   - identity-service: Spring Boot 4.0.1
-   - back-office-service: Spring Boot 4.0.2
-   - product-storage-service: Spring Boot 4.0.3
-   - **ecommerce-service: Spring Boot 3.5.6** ⚠️ (Different major version)
-
-2. **Mixed Architecture Patterns:**
-   - Ecommerce service uses Clean Architecture
-   - Other services use traditional layered architecture
-   - Inconsistent package naming
-
-3. **Error Handling:**
-   - Basic exception handling exists
-   - No global error handler in some services
-   - Inconsistent error response formats
-
-4. **Documentation:**
-   - Good CLAUDE.md files in most services
-   - Limited inline code documentation
-   - No API documentation (Swagger/OpenAPI)
-
-### Frontend
-1. **Multiple UI Libraries:**
-   - Back-office UI uses both Ant Design v6 AND MUI v9
-   - Mixing two major UI libraries creates bloat
-
-2. **Inconsistent State Management:**
-   - Redux for auth only
-   - Local state for everything else
-   - No centralized data fetching strategy
-
-3. **Code Duplication:**
-   - ProductDetail has 3 different implementations (indexOld, indexNew2, default)
-   - Similar CRUD patterns repeated across features
-   - No shared component library
-
-4. **Mock Data:**
-   - Some components still use mock data instead of API calls
-   - `src/mocks/` folder has hardcoded data
-
----
-
-## Recommended Prioritization for Remaining Work
-
-### Priority 1: Critical Gaps (Must Have)
-1. **Testing Implementation** (2-3 weeks)
-   - Unit tests for all services (target: 70% coverage)
-   - Integration tests for critical flows
-   - E2E tests for main user journeys
-
-2. **Product Reviews & Ratings** (1 week)
-   - Complete FeedbackController implementation
-   - Build customer review submission UI
-   - Display reviews on product detail pages
-   - Implement moderation workflow
-
-3. **Complete Business Analytics** (1 week)
-   - Revenue trend charts
-   - Inventory turnover metrics
-   - Customer behavior analytics
-   - Export to PDF/Excel
-
-### Priority 2: High Value Features (Should Have)
-4. **Recommendation System** (2-3 weeks)
-   - Implement collaborative filtering or content-based recommendations
-   - "Customers also bought" sections
-   - Personalized homepage for logged-in users
-
-5. **Blog/Content Management** (1-2 weeks)
-   - Implement blog CRUD backend
-   - Build admin CMS interface
-   - Create blog listing & detail pages for customers
-   - Add comment system
-
-6. **Customer Support System** (1-2 weeks)
-   - Ticket creation and tracking
-   - Agent assignment and status workflow
-   - Support dashboard for staff
-
-### Priority 3: Nice to Have
-7. **AI Chatbot** (3-4 weeks)
-   - Integrate with OpenAI/Dialogflow
-   - Build chat widget UI
-   - Train on product catalog and FAQs
-
-8. **Advanced Features**
-   - Supply chain demand tracking
-   - Expiration date alerts
-   - Mobile app development
-
-9. **DevOps & Production**
-   - CI/CD pipeline (GitHub Actions / Jenkins)
-   - Cloud deployment (AWS/GCP)
-   - Monitoring & logging (Prometheus, Grafana, ELK)
-
----
-
-## Completion Timeline Estimate
-
-Based on current progress and remaining work:
-
-| Phase | Work Required | Estimated Time | Target Completion |
-|-------|---------------|----------------|-------------------|
-| Testing Implementation | Unit + Integration + E2E tests | 2-3 weeks | May 15, 2026 |
-| Critical Features (P1) | Reviews, Analytics, Exports | 2 weeks | May 30, 2026 |
-| High Value Features (P2) | Recommendations, CMS, Support | 4-5 weeks | June 30, 2026 |
-| AI Chatbot (P3) | Integration & Training | 3-4 weeks | July 30, 2026 |
-
-**Realistic 100% Completion Date: July 30, 2026** (assuming full-time work)  
-**Original Target (Phase 4 end): May 17, 2026**  
-**Current Date: April 21, 2026**
+### 11. System Monitoring (F-TECH-0) ❌
+- Spring Boot actuator endpoints exist but no monitoring UI or alerting
 
 ---
 
@@ -574,124 +392,91 @@ Based on current progress and remaining work:
 
 | Metric | Value |
 |--------|-------|
-| **Overall Completion** | **70-75%** |
-| **Backend Services** | 4/4 (100%) |
-| **Frontend Apps** | 2/2 (100%) |
-| **Database Entities** | 68 implemented |
-| **Backend Controllers** | 30+ implemented |
-| **Frontend Pages** | 25+ implemented |
-| **Frontend Components** | 329 files |
-| **Use Cases Completed** | ~25/40 (62.5%) |
+| **Overall Completion** | **~82-85%** |
+| **Backend Services** | 5/5 (100% deployed) |
+| **Frontend Apps** | 3/3 (100% deployed) |
+| **Database Entities** | 68+ implemented |
+| **Backend Controllers** | 35+ implemented |
+| **Frontend Pages** | 30+ implemented |
+| **Kafka Topics** | 12+ active topics |
+| **Use Cases Completed** | ~30/40 (75%) |
 | **Test Coverage** | < 5% |
 
-### Completion by Category
+### Completion by Functional Requirement Category
 
-| Category | Completion | Grade |
-|----------|------------|-------|
-| Infrastructure & DevOps | 90% | A |
-| Authentication & Authorization | 95% | A |
-| Product Management | 100% | A+ |
-| Shopping & Orders | 95% | A |
-| Warehouse & Logistics | 85% | B+ |
-| Employee Management | 100% | A+ |
-| Customer Management | 75% | B |
-| Business Analytics | 40% | D |
-| Content Management | 5% | F |
-| AI/ML Features | 0% | F |
-| Testing | 0% | F |
+| Category | Completion | Change since Apr 21 |
+|----------|------------|---------------------|
+| Infrastructure & DevOps | 90% | → same |
+| Authentication & Authorization | 90% | → same |
+| Product Management | 100% | → same |
+| Shopping & Orders | 95% | → same |
+| Coupon & Sale Events | 90% | ↑ from ~30% |
+| Warehouse & Logistics | 85% | → same |
+| Employee Management | 100% | → same |
+| Provider Portal | 80% | ↑ from 0% (NEW) |
+| AI Search & Chatbot | 70% | ↑ from 0% (NEW) |
+| Customer Reviews | 25% | ↑ from 10% (backend done) |
+| Business Analytics | 40% | → same |
+| Content Management | 5% | → same |
+| Testing | 0% | → same |
 
-### Risk Assessment
+### Functional Requirement Coverage Summary
+
+| Stakeholder Group | Requirements | Done | Partial | Not Done |
+|-------------------|-------------|------|---------|----------|
+| F-SYSTEM (all) | 6 | 4 | 1 | 1 |
+| F-PROVIDER | 5 | 3 | 0 | 2 |
+| F-ENTERPRISE | 7 | 5 | 2 | 0 |
+| F-BUYER | 13 | 5 | 5 | 3 |
+| F-MANAGER | 11 | 9 | 1 | 1 |
+| F-WAREHOUSE | 6 | 4 | 0 | 2 |
+| F-PACKAGE | 3 | 2 | 1 | 0 |
+| F-DELIVERY | 3 | 2 | 1 | 0 |
+| F-BUSINESS | 7 | 3 | 3 | 1 |
+| F-TECH | 1 | 0 | 0 | 1 |
+| **Total** | **62** | **37 (60%)** | **14 (22%)** | **11 (18%)** |
+
+---
+
+## Risk Assessment
 
 **HIGH RISK:**
-- ❌ Testing coverage insufficient for production
-- ❌ Two major features (AI Chatbot, Recommendations) promised but not delivered
+- ❌ Testing coverage insufficient for production (< 5%)
+- ⚠️ search-chat-service not integrated into frontend — AI feature not visible to end users
 - ❌ No production deployment strategy
 
 **MEDIUM RISK:**
-- ⚠️ Incomplete business analytics
-- ⚠️ Customer review system not functional
-- ⚠️ Content management missing
+- ⚠️ Customer review system backend complete but no UI
+- ⚠️ Business analytics too basic for a final demo
+- ❌ No blog/content system despite being in spec
 
 **LOW RISK:**
-- ✅ Core e-commerce flow works
-- ✅ Warehouse operations functional
-- ✅ Infrastructure solid
+- ✅ Core e-commerce flow works end-to-end
+- ✅ Warehouse and logistics operations solid
+- ✅ Provider onboarding and verification complete
+- ✅ Infrastructure and event-driven architecture stable
 
 ---
 
-## Recommendations
+## Demo-Ready Features (for Presentation)
 
-### For Final Presentation (May 13-17, 2026)
-
-#### 1. Focus on Strengths
-Highlight the implemented features:
-- Complete microservices architecture with event-driven design
-- Working e-commerce flow (browse → cart → order → packaging → delivery)
-- Advanced warehouse management system
-- Mobile-optimized employee interfaces
-- Real payment integration (VNPay)
-
-#### 2. Be Transparent About Gaps
-Acknowledge missing features honestly:
-- "AI Chatbot and Recommendation System are in the backlog due to time constraints"
-- "Testing coverage is a known gap we plan to address post-presentation"
-- "Content management system simplified to focus on core e-commerce"
-
-#### 3. Demo Strategy
-Prepare demos for:
-- ✅ Customer shopping journey (browse → cart → checkout → payment)
-- ✅ Warehouse staff packaging workflow
-- ✅ Delivery driver interface
-- ✅ Admin product and category management
-- ✅ Real-time Kafka event streaming (show Kafka UI)
-
-#### 4. Quick Wins Before Presentation
-Implement these in 2-3 weeks:
-- ✅ Basic unit tests for critical flows
-- ✅ Complete product review UI (1-2 days work)
-- ✅ Improve dashboard analytics with more charts
-- ✅ Remove mock data dependencies
-- ✅ Clean up code (remove duplicate ProductDetail versions)
+| Demo | Status |
+|------|--------|
+| Customer shopping journey (browse → search → cart → coupon → checkout → VNPay) | ✅ Ready |
+| AI chatbot product search (via search-chat-service API) | ✅ Ready (API only) |
+| Warehouse staff packaging workflow | ✅ Ready |
+| Delivery driver mobile interface | ✅ Ready |
+| Admin product, category, and coupon management | ✅ Ready |
+| Sale event creation with product discounts | ✅ Ready |
+| Provider onboarding and verification (provider-ui) | ✅ Ready |
+| Provider demand confirmation workflow | ✅ Ready |
+| Manager verifying provider certificates/videos | ✅ Ready |
+| Real-time Kafka event streaming (Kafka UI at :9280) | ✅ Ready |
 
 ---
 
-## Conclusion
-
-The FreshHarvest e-commerce platform has achieved **70-75% completion** with a solid foundation:
-
-**✅ Strengths:**
-- Well-architected microservices system
-- Core e-commerce functionality working end-to-end
-- Excellent warehouse and logistics management
-- Good separation of concerns and modern tech stack
-- Comprehensive database design
-
-**❌ Weaknesses:**
-- Advanced features (AI, ML) not implemented
-- Testing coverage critically low
-- Business intelligence features basic
-- No content management system
-- Missing several planned use cases
-
-**📊 Overall Grade: B+ (85/100)**
-
-The project demonstrates strong software engineering fundamentals and delivers a functional e-commerce platform. However, it falls short of the ambitious scope outlined in the original specification, particularly in AI/ML features and advanced analytics. With focused effort on testing and core feature completion, this could be an A-grade project.
-
----
-
-**Report Generated:** April 21, 2026  
+**Report Updated:** May 14, 2026  
 **Analysis Based On:**
-- Project PDF: HK251-DAGD1-092_2211694_2211709_2211876.pdf (125 pages)
-- Source Code Analysis: 4 backend services + 2 frontend apps
-- Database Schema Review: 68 entities across 4 databases
-- Use Case Coverage: 40+ use cases documented vs implemented
-
-**Next Steps:**
-1. Review this report with the team
-2. Prioritize P1 tasks for completion before presentation
-3. Prepare honest demo focusing on implemented features
-4. Create backlog for post-graduation work (AI features, testing, etc.)
-
----
-
-*End of Report*
+- Source code scan of all 5 backend services and 3 frontend apps
+- Git log since April 21, 2026 (4 new commits)
+- Cross-referenced against functional requirements in `datn-report/Contents/4_pttkht/4_1_PhanTichYeuCau.tex`

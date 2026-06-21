@@ -16,13 +16,14 @@ ecommerce-microservices-platform/
 │   ├── identity-service/          # Port 9000 - User authentication & authorization
 │   ├── back-office-service/       # Port 9100 - Product & category management
 │   ├── product_storage_service/   # Port 9200 - Warehouse & inventory management
-│   └── ecommerce-service/         # Port 9301 - Orders & sales (Clean Architecture)
+│   └── ecommerce-service/         # Port 9300 - Orders & sales (Clean Architecture)
 ├── infrastructure/         # Shared infrastructure
 │   ├── database/          # PostgreSQL 17 multi-database setup
 │   └── kafka/             # Kafka 4.2.0 + Kafka UI
 └── frontend/              # React-based admin and customer UIs
     ├── ecommerce-ui/      # Customer-facing e-commerce app (React + Vite)
-    └── back-office-ui/    # Admin interface (React + Vite + MUI + Ant Design)
+    ├── back-office-ui/    # Admin interface (React + Vite + MUI + Ant Design)
+    └── provider-ui/       # Farmer/supplier portal (React + Vite + Ant Design)
 ```
 
 ## Quick Start
@@ -42,7 +43,8 @@ setup-repos.bat     # Windows
 This creates:
 - `services/` - 4 microservice repositories
 - `infrastructure/` - 2 infrastructure repositories  
-- `frontend/` - 2 frontend repositories
+- `frontend/` - 2 frontend repositories (ecommerce-ui, back-office-ui)
+  - Note: `provider-ui` is part of the main repo and not cloned separately
 
 **Repository URLs** are configured in `setup-repos.sh` (already filled in for HK251-DATN organization).
 
@@ -67,10 +69,10 @@ start.bat           # Windows
 ```
 
 This starts:
-- PostgreSQL (4 databases)
+- PostgreSQL (4 databases) + pgAdmin
 - Kafka + Kafka UI
 - All 4 microservices
-- Both frontend applications (ecommerce-ui and back-office-ui)
+- Frontend apps run locally (see Frontend Development Workflow)
 
 **Start script subcommands:**
 ```bash
@@ -126,6 +128,23 @@ cd services/{service-name}
 
 **All services use Maven Wrapper (`./mvnw`)** - no global Maven needed.
 
+### Environment File Locations
+
+**Root `.env` file** (Docker Compose variables):
+- Location: `/project-root/.env`
+- Used by: Docker Compose to configure all services
+- Required for: Docker-based deployment
+
+**Service-specific `.env` files** (Local development):
+- Location: `services/{service-name}/.env`
+- Used by: Individual service when running locally with `./mvnw spring-boot:run`
+- Copy from: `.env.example` in each service directory
+- Required for: Manual/local development only
+
+**Which to use:**
+- Docker deployment: Only need root `.env`
+- Local development: Need both root `.env` (for infrastructure) and service-specific `.env`
+
 ## Service Details
 
 ### identity-service (Port 9000)
@@ -153,7 +172,7 @@ cd services/{service-name}
 - **Key Logic**: Batch processing with unit conversion (mass/volume) to create product details
 - **See**: `services/product_storage_service/CLAUDE.md` for detailed architecture
 
-### ecommerce-service (Port 9301)
+### ecommerce-service (Port 9300)
 - **Tech**: Spring Boot 3.5.6, Java 21, Clean Architecture pattern
 - **Database**: ecommerce_db_2
 - **Responsibilities**: Order processing, sales transactions, pricing
@@ -173,6 +192,57 @@ cd services/{service-name}
   - Shopping carts and product reviews in Vietnamese
   - Seeder only runs when database is empty (checks `buyer` table)
 
+## API Endpoints & Documentation
+
+### Service Health Checks
+
+All Spring Boot services expose actuator endpoints:
+
+```bash
+# Check service health
+curl http://localhost:9000/actuator/health  # identity-service
+curl http://localhost:9100/actuator/health  # back-office-service
+curl http://localhost:9200/actuator/health  # product-storage-service
+curl http://localhost:9300/actuator/health  # ecommerce-service
+```
+
+### Common API Patterns
+
+All services follow RESTful conventions:
+
+**Standard CRUD endpoints:**
+- `GET /api/{resource}` - List all (paginated)
+- `GET /api/{resource}/{id}` - Get by ID
+- `POST /api/{resource}` - Create
+- `PUT /api/{resource}/{id}` - Update
+- `DELETE /api/{resource}/{id}` - Delete
+
+**Pagination:**
+- Query params: `?pageNum=0&pageSize=20`
+- Page numbering: 0-based index
+- Default page size: varies by service (typically 10-20)
+
+**Example API calls:**
+
+```bash
+# Identity Service - Get user info
+curl http://localhost:9000/api/users/1
+
+# Back-Office Service - List products
+curl http://localhost:9100/api/product-general?pageNum=0&pageSize=10
+
+# Product Storage - Get warehouse inventory
+curl http://localhost:9200/api/warehouses/1
+
+# Ecommerce Service - Get cart
+curl -H "Authorization: Bearer {jwt_token}" \
+  http://localhost:9300/api/cart/buyer/1
+```
+
+**Authentication:**
+- Identity/Back-Office/Product Storage: OAuth2 (check service-specific docs)
+- Ecommerce Service: JWT Bearer token (custom filter)
+
 ## Frontend Applications
 
 ### back-office-ui
@@ -185,19 +255,33 @@ cd services/{service-name}
 - **Purpose**: Customer-facing e-commerce application
 - **Dev server**: `npm run dev`
 
-**Note**: Frontend repos are separate from backend services and managed via `setup-repos.sh`.
+### provider-ui
+- **Tech**: React 19, Vite, TypeScript, Ant Design, TanStack Query, Zustand
+- **Purpose**: Portal for farmers/suppliers to manage products, view transactions, and track demand
+- **Dev server**: `npm run dev` (port 5273)
+- **UI Language**: Vietnamese (target users: non-technical farmers/vendors)
+- **See**: `frontend/provider-ui/CLAUDE.md` for detailed architecture
+
+**Note**: ecommerce-ui and back-office-ui repos are cloned via `setup-repos.sh`. provider-ui is part of the main repo.
 
 ### Frontend Development Workflow
 
-**Local Development (without Docker):**
+**Local Development (recommended):**
 ```bash
-cd frontend/back-office-ui  # or frontend/ecommerce-ui
+cd frontend/back-office-ui  # or frontend/ecommerce-ui or frontend/provider-ui
 npm install
 npm run dev
 ```
 
-**Docker Development:**
-Frontend services are included in docker-compose.yml and can be managed with service.sh:
+**Important**: Frontend services are **commented out** in `docker-compose.yml` by default. Run them locally for development.
+
+**Access URLs (local dev):**
+- Ecommerce UI: http://localhost:3000 (or Vite's default port)
+- Back-Office UI: http://localhost:5173
+- Provider UI: http://localhost:5273
+
+**To enable Docker deployment** (optional):
+Uncomment the frontend service sections in `docker-compose.yml`, then:
 ```bash
 ./service.sh rebuild ecommerce-ui      # Rebuild ecommerce UI
 ./service.sh rebuild back-office-ui    # Rebuild back-office UI
@@ -205,16 +289,45 @@ Frontend services are included in docker-compose.yml and can be managed with ser
 ./service.sh logs back-office-ui       # View back-office UI logs
 ```
 
-**Access URLs (Docker):**
-- Ecommerce UI: http://localhost:3000
-- Back-Office UI: http://localhost:5173
-
 **Stack:**
 - React 19, Vite, TypeScript (ecommerce-ui uses JavaScript)
 - State: Redux Toolkit, React Query
 - UI: Material-UI (back-office), Ant Design (back-office)
-- API calls integrate with backend services on ports 9000-9301
+- API calls integrate with backend services on ports 9000-9300
 - Production builds served via Nginx in Docker containers
+
+### Frontend-Backend Integration
+
+**API Base URLs:**
+
+Development (local):
+```javascript
+// ecommerce-ui typically uses
+const API_BASE_URL = 'http://localhost:9300/api'
+
+// back-office-ui typically uses
+const IDENTITY_API = 'http://localhost:9000/api'
+const BACKOFFICE_API = 'http://localhost:9100/api'
+const STORAGE_API = 'http://localhost:9200/api'
+```
+
+**CORS Configuration:**
+All backend services are configured to allow frontend origins. Default CORS settings in `config/CorsConfig.java`:
+- Allowed origins: `http://localhost:3000`, `http://localhost:5173`
+- Allowed methods: GET, POST, PUT, DELETE, OPTIONS
+- Credentials: allowed
+
+**Development Proxy (Vite):**
+If needed, configure proxy in `vite.config.js`:
+```javascript
+export default {
+  server: {
+    proxy: {
+      '/api': 'http://localhost:9300'
+    }
+  }
+}
+```
 
 ## Event-Driven Architecture
 
@@ -237,6 +350,54 @@ Identity Service
 - Events trigger domain logic in service layer
 - Failures logged, no automatic retry (consumer must handle)
 - All topics use 3 partitions, replication factor 1
+
+### Kafka Event Payload Examples
+
+**product-general-events** (Back-Office → Product Storage):
+```json
+{
+  "eventType": "PRODUCT_CREATED",
+  "productId": 123,
+  "name": "Fresh Apple",
+  "subSubCategoryId": 45,
+  "unit": "MASS",
+  "timestamp": "2026-04-30T10:00:00Z"
+}
+```
+
+**batch-detail-events** (Product Storage → Ecommerce):
+```json
+{
+  "eventType": "BATCH_DETAIL_CREATED",
+  "batchDetailId": 789,
+  "productGeneralId": 123,
+  "quantity": 50,
+  "unitPrice": 25000,
+  "packageSize": 500,
+  "packageUnit": "GRAM",
+  "expirationDate": "2026-05-15",
+  "warehouseId": 1
+}
+```
+
+**order-item-events** (Ecommerce → Product Storage):
+```json
+{
+  "eventType": "ORDER_PLACED",
+  "orderId": 456,
+  "items": [
+    {
+      "batchDetailId": 789,
+      "quantity": 5
+    }
+  ]
+}
+```
+
+**Event Monitoring:**
+- Kafka UI: http://localhost:9280
+- View messages, consumer lag, partition distribution
+- Useful for debugging event flow issues
 
 ## Common Development Patterns
 
@@ -351,6 +512,36 @@ cd services/{service-name}
 
 Tests use Spring Boot Test framework with JPA and WebMVC testing support.
 
+### Integration Testing
+
+**Test Kafka consumers/producers:**
+```bash
+# Use embedded Kafka for tests
+# Most services use @EmbeddedKafka annotation in test classes
+./mvnw test -Dtest=*KafkaTest
+```
+
+**Test with running Docker services:**
+```bash
+# Start infrastructure first
+./start.sh up
+
+# Run integration tests against live services
+cd services/identity-service
+./mvnw verify -P integration-test
+```
+
+**Test API endpoints:**
+```bash
+# Use Spring MockMvc for controller tests
+./mvnw test -Dtest=*ControllerTest
+
+# Or test against running service
+curl -X POST http://localhost:9000/api/users \
+  -H "Content-Type: application/json" \
+  -d '{"username":"test","password":"test123"}'
+```
+
 ## Development Workflow - Individual Service Management
 
 When working on a single service, use `service.sh` to quickly rebuild/restart:
@@ -373,8 +564,8 @@ When working on a single service, use `service.sh` to quickly rebuild/restart:
 
 **Service aliases supported:**
 - `identity`, `back-office`/`backoffice`, `product-storage`/`product`, `ecommerce`
-- `ecommerce-ui`, `back-office-ui`/`backoffice-ui`
-- `postgres`/`db`, `kafka`, `kafka-ui`
+- `ecommerce-ui`, `back-office-ui`/`backoffice-ui`, `provider-ui` (if enabled in docker-compose)
+- `postgres`/`db`, `pgadmin`, `kafka`, `kafka-ui`
 
 **Common workflow:**
 1. Edit code in `services/{service-name}/`
@@ -398,6 +589,40 @@ When working on a single service, use `service.sh` to quickly rebuild/restart:
 ./service.sh logs {service-name}
 ```
 
+### Hot Reload / Development Mode
+
+**Spring Boot DevTools** (automatic restart on code changes):
+
+Most services include DevTools dependency. To enable:
+
+```bash
+# Run service in dev mode
+cd services/identity-service
+./mvnw spring-boot:run
+
+# Edit code - service auto-restarts when you save
+```
+
+**Faster rebuild cycle:**
+```bash
+# Skip tests for faster builds during development
+./mvnw clean package -DskipTests spring-boot:run
+```
+
+**Frontend hot reload:**
+```bash
+# Vite automatically hot-reloads on file changes
+cd frontend/ecommerce-ui
+npm run dev
+# Edit .jsx files - browser auto-updates
+```
+
+**Docker hot reload:**
+Docker doesn't support hot reload by default. For faster iteration:
+1. Use local development (`./mvnw spring-boot:run`) for code changes
+2. Use Docker only for integration testing
+3. When ready, rebuild with `./service.sh rebuild {service-name}`
+
 ## External Dependencies
 
 ### Cloudflare R2 (Object Storage)
@@ -406,14 +631,50 @@ All services integrate with Cloudflare R2 for file storage:
 - Required env vars: `R2_ACCOUNT_ID`, `R2_ACCESS_KEY`, `R2_SECRET_KEY`
 - Public bucket URLs configured per service
 
+### Goong Maps API
+Vietnamese mapping and geocoding service used by ecommerce-service:
+- Required env var: `GOONG_API_KEY`
+- Get API key from: https://goong.io/
+- Used for: Address validation, delivery route calculation
+
 ### Database Connection
 PostgreSQL connection via environment variables:
 - `DB_HOST`, `DB_PORT`, `DB_USERNAME`, `DB_PASSWORD`
 - Each service connects to its own database
+- **pgAdmin**: Web UI for database administration at http://localhost:5480
+  - Default email: `admin@ecommerce.local`
+  - Default password: `admin`
 
 ### Kafka Connection
 - `KAFKA_HOST`, `KAFKA_PORT`
 - Bootstrap servers: `{KAFKA_HOST}:{KAFKA_PORT}`
+
+## Inter-Service Communication
+
+Services communicate through **two patterns**:
+
+### 1. Event-Driven (Kafka)
+Asynchronous messaging for domain events (see Event-Driven Architecture section).
+
+### 2. REST API Calls (Synchronous)
+Some services make direct HTTP calls to other services. Configured via environment variables:
+
+```bash
+# In docker-compose.yml or service .env files
+IDENTITY_HOST=identity-service      # or localhost for local dev
+IDENTITY_PORT=9000
+BACK_OFFICE_HOST=back-office-service
+BACK_OFFICE_PORT=9100
+PRODUCT_STORAGE_HOST=product-storage-service
+PRODUCT_STORAGE_PORT=9200
+ECOMMERCE_HOST=ecommerce-service
+ECOMMERCE_PORT=9300
+```
+
+**Key points:**
+- When running in Docker, use service names as hostnames (e.g., `identity-service`)
+- For local development outside Docker, use `localhost`
+- Services construct URLs like: `http://${IDENTITY_HOST}:${IDENTITY_PORT}/api/...`
 
 ## Multi-Service Development
 
@@ -455,7 +716,8 @@ Product storage service performs critical batch-to-detail conversion:
 - 5432: PostgreSQL
 - 9092: Kafka
 - 9280: Kafka UI
-- 9000, 9100, 9200, 9301: Microservices
+- 5480: pgAdmin (PostgreSQL admin UI)
+- 9000, 9100, 9200, 9300: Microservices
 - 3000: Ecommerce UI
 - 5173: Back-Office UI
 
@@ -474,3 +736,108 @@ Product storage service performs critical batch-to-detail conversion:
 - Ensure Java 25 installed for identity/back-office/product-storage services
 - Ensure Java 21 installed for ecommerce service
 - Clear Maven cache: `./mvnw clean`
+
+## Common Pitfalls & Quick Fixes
+
+### 1. Maven Build Fails in Docker
+**Symptom:** "Connection refused" to Maven repositories during `docker-compose up`
+
+**Solution:** Build JARs locally first
+```bash
+./build-local.sh    # Linux/Mac
+build-local.bat     # Windows
+```
+This is the **recommended workflow** - Docker then just copies pre-built JARs.
+
+### 2. Service Starts Before Dependencies
+**Symptom:** Service crashes with "Connection refused" to database or Kafka
+
+**Solution:** Wait for health checks
+```bash
+# Check all services are healthy
+docker-compose ps
+
+# Restart the failed service after dependencies are ready
+./service.sh restart {service-name}
+```
+
+### 3. Kafka Events Not Flowing
+**Symptom:** Product created in back-office but not appearing in product-storage
+
+**Debug steps:**
+1. Check Kafka UI (http://localhost:9280) - verify topic exists
+2. Check producer logs: `./service.sh logs back-office`
+3. Check consumer logs: `./service.sh logs product-storage`
+4. Verify event was published: Kafka UI → Topics → Messages tab
+
+**Common cause:** Consumer started before topic was created. Restart consumer.
+
+### 4. Frontend Can't Connect to Backend
+**Symptom:** CORS errors or network errors in browser console
+
+**Check:**
+1. Backend service is running: `curl http://localhost:9300/actuator/health`
+2. CORS config allows frontend origin (check `CorsConfig.java`)
+3. Frontend API URL is correct (check `.env` or config files)
+
+### 5. R2 File Upload Fails
+**Symptom:** 403 Forbidden or connection errors
+
+**Check `.env` file:**
+```bash
+# Verify credentials are set
+cat .env | grep R2_
+
+# Test with minimal credentials
+R2_ACCOUNT_ID=your_id
+R2_ACCESS_KEY=your_key
+R2_SECRET_KEY=your_secret
+```
+
+**Common mistake:** Forgetting to copy `.env.example` to `.env`
+
+### 6. Database Schema Mismatch
+**Symptom:** SQL errors about missing columns or tables
+
+**Solution:** Let Hibernate update schema
+```bash
+# Check application.yaml has:
+# spring.jpa.hibernate.ddl-auto: update
+
+# Or reset database (WARNING: deletes data)
+docker-compose down -v
+docker-compose up -d postgres
+```
+
+### 7. Service Dependency Order Issues
+**Remember the flow:**
+1. Infrastructure: PostgreSQL, Kafka
+2. Independent services: identity-service, back-office-service
+3. Dependent services: product_storage_service (needs back-office events)
+4. Final service: ecommerce-service (needs product-storage events)
+
+**If services start out of order:**
+```bash
+# Restart in correct order
+./service.sh restart back-office
+sleep 5
+./service.sh restart product-storage
+sleep 5
+./service.sh restart ecommerce
+```
+
+### 8. Port Already in Use
+**Quick check:**
+```bash
+# Linux/Mac
+sudo lsof -i :5432
+
+# Windows
+netstat -ano | findstr :5432
+```
+
+**Quick fix:** Stop conflicting service or change port in `docker-compose.yml`
+
+---
+
+**For more detailed troubleshooting, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md)**

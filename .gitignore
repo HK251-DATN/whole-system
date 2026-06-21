@@ -207,6 +207,7 @@ libs/
 services/*/postgres_data/
 infrastructure/database/postgres_data/
 infrastructure/kafka/kafka_data/
+datn-report
 
 # Backup files
 *.orig
