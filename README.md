@@ -26,8 +26,8 @@ git clone https://github.com/HK251-DATN/project-root.git
 cd project-root
 
 # 2. Run setup script to clone all service repositories
-./setup-repos.sh    # Linux/Mac
-setup-repos.bat     # Windows
+./linux/setup-repos.sh    # Linux/Mac
+windows/setup-repos.bat   # Windows
 
 # This will create and populate:
 #   - services/ (4 microservice repos)
@@ -43,12 +43,12 @@ cp .env.example .env
 # Edit .env and add your Cloudflare R2 credentials
 
 # 2. Build JARs locally (avoids Docker network issues)
-./build-local.sh    # Linux/Mac
-build-local.bat     # Windows
+./linux/build-local.sh    # Linux/Mac
+windows/build-local.bat   # Windows
 
 # 3. Start all services
-./start.sh          # Linux/Mac
-start.bat           # Windows
+./linux/start.sh          # Linux/Mac
+windows/start.bat         # Windows
 ```
 
 That's it! All services will be available at:
@@ -112,9 +112,16 @@ ecommerce-microservices-platform/
 │   ├── ecommerce-ui/             # Customer-facing e-commerce app
 │   └── back-office-ui/           # Admin/back-office interface
 ├── docker-compose.yml            # Main orchestration
-├── setup-repos.sh/.bat           # First-time repository setup
-├── service.sh/.bat               # Individual service management
-├── start.sh / start.bat          # Startup scripts
+├── linux/                        # Linux/Mac scripts
+│   ├── setup-repos.sh            # First-time repository setup
+│   ├── service.sh                # Individual service management
+│   ├── build-local.sh            # Local JAR build
+│   └── start.sh                  # Startup script
+├── windows/                      # Windows scripts
+│   ├── setup-repos.bat           # First-time repository setup
+│   ├── service.bat               # Individual service management
+│   ├── build-local.bat           # Local JAR build
+│   └── start.bat                 # Startup script
 └── .env.example                  # Environment template
 ```
 
@@ -216,19 +223,19 @@ See [DOCKER_SETUP.md](DOCKER_SETUP.md) for complete guide.
 **Common commands:**
 ```bash
 # Start all
-./start.sh up
+./linux/start.sh up
 
 # View logs
-./start.sh logs identity-service
+./linux/start.sh logs identity-service
 
 # Restart after code changes
-./start.sh rebuild
+./linux/start.sh rebuild
 
 # Stop all
-./start.sh stop
+./linux/start.sh stop
 
 # Clean everything
-./start.sh clean
+./linux/start.sh clean
 ```
 
 ### Development Workflow - Individual Service Management
@@ -237,24 +244,24 @@ After editing code in a service, use the `service.sh` script to quickly rebuild 
 
 ```bash
 # Rebuild and restart after code changes (recommended)
-./service.sh rebuild identity           # Apply changes to identity service
-./service.sh rebuild back-office        # Apply changes to back-office service
-./service.sh rebuild product-storage    # Apply changes to product storage
-./service.sh rebuild ecommerce          # Apply changes to ecommerce service
+./linux/service.sh rebuild identity           # Apply changes to identity service
+./linux/service.sh rebuild back-office        # Apply changes to back-office service
+./linux/service.sh rebuild product-storage    # Apply changes to product storage
+./linux/service.sh rebuild ecommerce          # Apply changes to ecommerce service
 
 # Other useful commands
-./service.sh logs identity              # View logs (follow mode)
-./service.sh restart identity           # Restart without rebuilding
-./service.sh stop identity              # Stop a service
-./service.sh start identity             # Start a service
-./service.sh status identity            # Show service status
-./service.sh exec identity              # Open bash inside container
+./linux/service.sh logs identity              # View logs (follow mode)
+./linux/service.sh restart identity           # Restart without rebuilding
+./linux/service.sh stop identity              # Stop a service
+./linux/service.sh start identity             # Start a service
+./linux/service.sh status identity            # Show service status
+./linux/service.sh exec identity              # Open bash inside container
 ```
 
 **Common development workflow:**
 1. Edit code in `services/identity-service/`
-2. Run `./service.sh rebuild identity` to apply changes
-3. Run `./service.sh logs identity` to verify the service started correctly
+2. Run `./linux/service.sh rebuild identity` to apply changes
+3. Run `./linux/service.sh logs identity` to verify the service started correctly
 4. Test your changes
 
 **Available service aliases:**
@@ -353,10 +360,10 @@ docker-compose exec identity-service ./mvnw test
 docker info
 
 # View logs
-./start.sh logs
+./linux/start.sh logs
 
 # Check specific service
-./start.sh logs identity-service
+./linux/start.sh logs identity-service
 ```
 
 ### Port conflicts
@@ -422,7 +429,7 @@ Docker Compose handles this automatically via health checks and dependencies.
 1. Create feature branch
 2. Make changes
 3. Run tests: `./mvnw test`
-4. Test with Docker: `./start.sh rebuild`
+4. Test with Docker: `./linux/start.sh rebuild`
 5. Submit pull request
 
 ## 🌟 Features
@@ -466,7 +473,7 @@ Capstone Project Team - 2026
 For issues and questions:
 - 📖 Check [DOCKER_SETUP.md](DOCKER_SETUP.md) for setup help
 - 🐛 Check [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for common issues
-- 📋 Review service logs: `./start.sh logs [service-name]`
+- 📋 Review service logs: `./linux/start.sh logs [service-name]`
 - 🎛️ Monitor Kafka: http://localhost:9280
 - 💬 Open an issue on [GitHub](https://github.com/yourusername/ecommerce-microservices-platform/issues)
 
