@@ -136,6 +136,12 @@ services:
       - "9000:9000"
     networks:
       - ecommerce-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9000/actuator/health/readiness || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
     restart: on-failure
 
   # Back-Office Service (Port 9100)
@@ -148,6 +154,8 @@ services:
       postgres:
         condition: service_healthy
       kafka:
+        condition: service_healthy
+      identity-service:
         condition: service_healthy
     environment:
       # Database
@@ -187,6 +195,8 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
+      identity-service:
+        condition: service_healthy
     environment:
       # Database
       DB_HOST: postgres
@@ -224,6 +234,8 @@ services:
       postgres:
         condition: service_healthy
       kafka:
+        condition: service_healthy
+      identity-service:
         condition: service_healthy
       product-storage-service:
         condition: service_started
