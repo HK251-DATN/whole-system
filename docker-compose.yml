@@ -32,14 +32,23 @@ services:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@ecommerce.local}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
       PGADMIN_CONFIG_SERVER_MODE: "False"
+      # Re-import servers.json on every start (not just first-ever boot of the
+      # pgadmin_data volume), so this also takes effect for volumes that already
+      # existed before auto-registration was added, and picks up future edits.
+      PGADMIN_REPLACE_SERVERS_ON_STARTUP: "True"
     ports:
       - "5480:80"
     volumes:
       - pgadmin_data:/var/lib/pgadmin
+      # Auto-registers the postgres server (and all its databases) - no manual
+      # "Register Server" click needed. You'll still be prompted for the DB
+      # password the first time you expand/connect to it each session.
+      - ./infrastructure/pgadmin/servers.json:/pgadmin4/servers.json:ro
     networks:
       - ecommerce-network
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
 
   # Kafka Broker
