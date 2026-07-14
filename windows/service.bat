@@ -248,29 +248,14 @@ echo ========================================
 echo Resetting %RS_SERVICE%
 echo ========================================
 
-REM Capture the named volumes mounted into the container before it's removed,
-REM so we wipe exactly what this service owns instead of guessing volume names.
-echo [1/4] Looking up data volumes...
-set VOL_LIST=
-for /f "delims=" %%v in ('docker inspect "%RS_SERVICE%" --format "{{ range .Mounts }}{{ if eq .Type \"volume\" }}{{ .Name }} {{ end }}{{ end }}" 2^>nul') do set VOL_LIST=%%v
-if "%VOL_LIST%"=="" (
-    echo   ^(no named volumes found on %RS_SERVICE%, or container doesn't exist yet^)
-) else (
-    echo [OK] Found: %VOL_LIST%
-)
+REM "down <service> -v" scopes both the container removal and the volume wipe
+REM to just this service (other running services/volumes are untouched).
+REM Requires a Compose version new enough to accept a service filter on "down".
+echo [1/2] Removing container and its data volume(s)...
+%DOCKER_COMPOSE_CMD% down "%RS_SERVICE%" -v
+echo [OK] %RS_SERVICE% and its volume(s) removed
 
-echo [2/4] Stopping and removing container...
-%DOCKER_COMPOSE_CMD% stop "%RS_SERVICE%" 2>nul
-%DOCKER_COMPOSE_CMD% rm -f "%RS_SERVICE%" 2>nul
-echo [OK] Container removed
-
-echo [3/4] Removing data volume(s)...
-if not "%VOL_LIST%"=="" (
-    for %%v in (%VOL_LIST%) do docker volume rm "%%v" 2>nul
-)
-echo [OK] Volume(s) removed
-
-echo [4/4] Starting %RS_SERVICE% fresh...
+echo [2/2] Starting %RS_SERVICE% fresh...
 %DOCKER_COMPOSE_CMD% up -d "%RS_SERVICE%"
 if %errorlevel% neq 0 (
     echo [ERROR] Failed to start %RS_SERVICE%

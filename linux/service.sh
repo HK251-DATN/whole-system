@@ -293,31 +293,14 @@ reset_one_service() {
     echo -e "${BLUE}Resetting $service${NC}"
     echo -e "${BLUE}========================================${NC}"
 
-    # Capture the named volumes mounted into the container before it's removed,
-    # so we wipe exactly what this service owns instead of guessing project/volume names.
-    echo -e "${YELLOW}→ [1/4] Looking up data volumes...${NC}"
-    local volumes
-    volumes=$(docker inspect "$service" --format '{{ range .Mounts }}{{ if eq .Type "volume" }}{{ .Name }}{{ "\n" }}{{ end }}{{ end }}' 2>/dev/null)
-    if [ -z "$volumes" ]; then
-        echo -e "${YELLOW}  (no named volumes found on $service, or container doesn't exist yet)${NC}"
-    else
-        echo -e "${GREEN}✓ Found: $(echo "$volumes" | tr '\n' ' ')${NC}"
-    fi
+    # `down <service> -v` scopes both the container removal and the volume wipe
+    # to just this service (verified: other running services/volumes are untouched).
+    # Requires a Compose version new enough to accept a service filter on `down`.
+    echo -e "${YELLOW}→ [1/2] Removing container and its data volume(s)...${NC}"
+    $DOCKER_COMPOSE_CMD down "$service" -v
+    echo -e "${GREEN}✓ $service and its volume(s) removed${NC}"
 
-    echo -e "${YELLOW}→ [2/4] Stopping and removing container...${NC}"
-    $DOCKER_COMPOSE_CMD stop "$service" 2>/dev/null
-    $DOCKER_COMPOSE_CMD rm -f "$service" 2>/dev/null
-    echo -e "${GREEN}✓ Container removed${NC}"
-
-    echo -e "${YELLOW}→ [3/4] Removing data volume(s)...${NC}"
-    if [ -n "$volumes" ]; then
-        while IFS= read -r vol; do
-            [ -n "$vol" ] && docker volume rm "$vol" 2>/dev/null
-        done <<< "$volumes"
-    fi
-    echo -e "${GREEN}✓ Volume(s) removed${NC}"
-
-    echo -e "${YELLOW}→ [4/4] Starting $service fresh...${NC}"
+    echo -e "${YELLOW}→ [2/2] Starting $service fresh...${NC}"
     $DOCKER_COMPOSE_CMD up -d "$service"
     if [ $? -ne 0 ]; then
         echo -e "${RED}✗ Failed to start $service${NC}"

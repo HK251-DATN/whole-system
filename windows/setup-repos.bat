@@ -12,9 +12,10 @@ set PRODUCT_STORAGE_SERVICE_REPO=git@github.com:HK251-DATN/product_storage_servi
 set ECOMMERCE_SERVICE_REPO=git@github.com:HK251-DATN/ecommerce-temp.git
 set SEARCH_CHAT_SERVICE_REPO=git@github.com:HK251-DATN/recommend-feature.git
 
-REM Infrastructure (2 repositories)
+REM Infrastructure (3 repositories)
 set DATABASE_INFRA_REPO=git@github.com:HK251-DATN/database_schema.git
 set KAFKA_INFRA_REPO=git@github.com:HK251-DATN/kafka-share.git
+set PGADMIN_INFRA_REPO=git@github.com:HK251-DATN/pgadmin.git
 
 REM Frontend (2 repositories)
 set FRONTEND_REPO_1=git@github.com:HK251-DATN/FE-prototype.git
@@ -38,7 +39,7 @@ echo.
 
 REM Clone services
 echo ==========================================
-echo Cloning Service Repositories (5/9)
+echo Cloning Service Repositories (5/11)
 echo ==========================================
 call :clone_repo "%IDENTITY_SERVICE_REPO%" "services\identity-service" "identity-service"
 call :clone_repo "%BACK_OFFICE_SERVICE_REPO%" "services\back-office-service" "back-office-service"
@@ -48,14 +49,15 @@ call :clone_repo "%SEARCH_CHAT_SERVICE_REPO%" "services\search-chat-service" "se
 
 REM Clone infrastructure
 echo ==========================================
-echo Cloning Infrastructure Repositories (2/9)
+echo Cloning Infrastructure Repositories (3/11)
 echo ==========================================
 call :clone_repo "%DATABASE_INFRA_REPO%" "infrastructure\database" "database-infrastructure"
 call :clone_repo "%KAFKA_INFRA_REPO%" "infrastructure\kafka" "kafka-infrastructure"
+call :clone_repo "%PGADMIN_INFRA_REPO%" "infrastructure\pgadmin" "pgadmin-infrastructure"
 
 REM Clone frontend
 echo ==========================================
-echo Cloning Frontend Repositories (3/9)
+echo Cloning Frontend Repositories (3/11)
 echo ==========================================
 call :clone_repo "%FRONTEND_REPO_1%" "frontend\ecommerce-ui" "ecommerce-ui"
 call :clone_repo "%FRONTEND_REPO_2%" "frontend\back-office-ui" "back-office-ui"
