@@ -23,6 +23,13 @@ if "%SERVICE_INPUT%"=="" (
 REM Map service aliases to actual names
 call :map_service_name "%SERVICE_INPUT%"
 
+REM Check for a -y/--yes flag anywhere after the service name (skips reset confirmation)
+set SKIP_CONFIRM=0
+if "%3"=="-y" set SKIP_CONFIRM=1
+if "%3"=="--yes" set SKIP_CONFIRM=1
+if "%4"=="-y" set SKIP_CONFIRM=1
+if "%4"=="--yes" set SKIP_CONFIRM=1
+
 REM Detect docker-compose or docker compose
 call :check_docker_compose
 
@@ -31,6 +38,7 @@ if "%COMMAND%"=="rebuild" goto :rebuild_service
 if "%COMMAND%"=="restart" goto :restart_service
 if "%COMMAND%"=="stop" goto :stop_service
 if "%COMMAND%"=="start" goto :start_service
+if "%COMMAND%"=="reset" goto :reset_service
 if "%COMMAND%"=="logs" goto :view_logs
 if "%COMMAND%"=="status" goto :show_status
 if "%COMMAND%"=="exec" goto :exec_bash
@@ -52,6 +60,7 @@ echo   rebuild     - Rebuild and restart a service (apply code changes)
 echo   restart     - Restart a service without rebuilding
 echo   stop        - Stop a service
 echo   start       - Start a service
+echo   reset       - Wipe a service's data volume and start it fresh (DESTRUCTIVE)
 echo   logs        - View logs for a service (follow mode)
 echo   status      - Show status of a service
 echo   exec        - Execute bash inside a service container
@@ -66,6 +75,7 @@ echo   back-office-ui   - Back Office UI (port 5173)
 echo   postgres / db    - PostgreSQL Database
 echo   kafka            - Kafka Broker
 echo   kafka-ui         - Kafka UI
+echo   infra            - postgres + kafka together (reset only)
 echo.
 echo Examples:
 echo   service.bat rebuild identity          # Rebuild identity service after code changes
@@ -73,6 +83,9 @@ echo   service.bat restart product-storage   # Restart product storage service
 echo   service.bat logs ecommerce            # View ecommerce service logs
 echo   service.bat stop back-office          # Stop back office service
 echo   service.bat exec identity             # Open bash in identity service container
+echo   service.bat reset postgres            # Wipe Postgres data and start clean
+echo   service.bat reset infra               # Wipe Postgres + Kafka and start clean
+echo   service.bat reset infra -y            # Same, skip the confirmation prompt
 echo.
 exit /b
 
@@ -214,6 +227,90 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 echo [OK] Service started
+exit /b
+
+:confirm_reset
+REM %~1 = warning message to show before wiping data
+if "%SKIP_CONFIRM%"=="1" exit /b 0
+echo [WARNING] %~1
+set /p ANSWER="Type 'yes' to continue: "
+if not "%ANSWER%"=="yes" (
+    echo Aborted, nothing was touched.
+    exit /b 1
+)
+exit /b 0
+
+:reset_one_service
+REM %~1 = compose service name to wipe and restart
+set RS_SERVICE=%~1
+
+echo ========================================
+echo Resetting %RS_SERVICE%
+echo ========================================
+
+REM Capture the named volumes mounted into the container before it's removed,
+REM so we wipe exactly what this service owns instead of guessing volume names.
+echo [1/4] Looking up data volumes...
+set VOL_LIST=
+for /f "delims=" %%v in ('docker inspect "%RS_SERVICE%" --format "{{ range .Mounts }}{{ if eq .Type \"volume\" }}{{ .Name }} {{ end }}{{ end }}" 2^>nul') do set VOL_LIST=%%v
+if "%VOL_LIST%"=="" (
+    echo   ^(no named volumes found on %RS_SERVICE%, or container doesn't exist yet^)
+) else (
+    echo [OK] Found: %VOL_LIST%
+)
+
+echo [2/4] Stopping and removing container...
+%DOCKER_COMPOSE_CMD% stop "%RS_SERVICE%" 2>nul
+%DOCKER_COMPOSE_CMD% rm -f "%RS_SERVICE%" 2>nul
+echo [OK] Container removed
+
+echo [3/4] Removing data volume(s)...
+if not "%VOL_LIST%"=="" (
+    for %%v in (%VOL_LIST%) do docker volume rm "%%v" 2>nul
+)
+echo [OK] Volume(s) removed
+
+echo [4/4] Starting %RS_SERVICE% fresh...
+%DOCKER_COMPOSE_CMD% up -d "%RS_SERVICE%"
+if %errorlevel% neq 0 (
+    echo [ERROR] Failed to start %RS_SERVICE%
+    exit /b 1
+)
+echo [OK] %RS_SERVICE% started
+exit /b 0
+
+:reset_service
+if "%SERVICE%"=="infra" (
+    call :confirm_reset "This wipes ALL data in Postgres (every service's DB) and Kafka (all topics/messages)."
+    if errorlevel 1 exit /b 1
+    call :reset_one_service "postgres"
+    call :reset_one_service "kafka"
+    echo [INFO] Recreating Kafka topics (waits for Kafka to report healthy)...
+    %DOCKER_COMPOSE_CMD% up -d kafka-init
+) else if "%SERVICE%"=="postgres" (
+    call :confirm_reset "This wipes ALL data in Postgres, including every microservice's database."
+    if errorlevel 1 exit /b 1
+    call :reset_one_service "postgres"
+) else if "%SERVICE%"=="kafka" (
+    call :confirm_reset "This wipes all Kafka topics and messages (consumer offsets included)."
+    if errorlevel 1 exit /b 1
+    call :reset_one_service "kafka"
+    echo [INFO] Recreating Kafka topics (waits for Kafka to report healthy)...
+    %DOCKER_COMPOSE_CMD% up -d kafka-init
+) else (
+    call :confirm_reset "This wipes %SERVICE%'s data volume, if it has one."
+    if errorlevel 1 exit /b 1
+    call :reset_one_service "%SERVICE%"
+)
+
+echo.
+echo ========================================
+echo [OK] Reset complete
+echo ========================================
+echo.
+echo Note: microservices connected to what you just reset (DB connections, Kafka
+echo consumer groups) may need a restart to pick up a clean state:
+echo   service.bat restart ^<service^>
 exit /b
 
 :view_logs

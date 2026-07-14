@@ -54,6 +54,7 @@ show_usage() {
     echo "  restart     - Restart a service without rebuilding"
     echo "  stop        - Stop a service"
     echo "  start       - Start a service"
+    echo "  reset       - Wipe a service's data volume and start it fresh (DESTRUCTIVE)"
     echo "  logs        - View logs for a service (follow mode)"
     echo "  status      - Show status of a service"
     echo "  exec        - Execute bash inside a service container"
@@ -69,6 +70,7 @@ show_usage() {
     echo "  postgres / db    - PostgreSQL Database"
     echo "  kafka            - Kafka Broker"
     echo "  kafka-ui         - Kafka UI"
+    echo "  infra            - postgres + kafka together (reset only)"
     echo ""
     echo -e "${BLUE}Examples:${NC}"
     echo "  ./service.sh rebuild identity          # Rebuild identity service after code changes"
@@ -76,6 +78,9 @@ show_usage() {
     echo "  ./service.sh logs ecommerce            # View ecommerce service logs"
     echo "  ./service.sh stop back-office          # Stop back office service"
     echo "  ./service.sh exec identity             # Open bash in identity service container"
+    echo "  ./service.sh reset postgres            # Wipe Postgres data and start clean"
+    echo "  ./service.sh reset infra               # Wipe Postgres + Kafka and start clean"
+    echo "  ./service.sh reset infra -y            # Same, skip the confirmation prompt"
 }
 
 # Get actual service name from alias
@@ -265,6 +270,100 @@ start_service() {
     fi
 }
 
+# Ask for confirmation before a destructive action, unless -y/--yes was passed
+confirm_reset() {
+    local prompt=$1
+    if [ "$SKIP_CONFIRM" == "1" ]; then
+        return 0
+    fi
+
+    echo -e "${RED}⚠ $prompt${NC}"
+    read -r -p "Type 'yes' to continue: " answer
+    if [ "$answer" != "yes" ]; then
+        echo -e "${YELLOW}Aborted, nothing was touched.${NC}"
+        exit 1
+    fi
+}
+
+# Wipe a single infra service's data volume and start it fresh
+reset_one_service() {
+    local service=$1
+
+    echo -e "${BLUE}========================================${NC}"
+    echo -e "${BLUE}Resetting $service${NC}"
+    echo -e "${BLUE}========================================${NC}"
+
+    # Capture the named volumes mounted into the container before it's removed,
+    # so we wipe exactly what this service owns instead of guessing project/volume names.
+    echo -e "${YELLOW}→ [1/4] Looking up data volumes...${NC}"
+    local volumes
+    volumes=$(docker inspect "$service" --format '{{ range .Mounts }}{{ if eq .Type "volume" }}{{ .Name }}{{ "\n" }}{{ end }}{{ end }}' 2>/dev/null)
+    if [ -z "$volumes" ]; then
+        echo -e "${YELLOW}  (no named volumes found on $service, or container doesn't exist yet)${NC}"
+    else
+        echo -e "${GREEN}✓ Found: $(echo "$volumes" | tr '\n' ' ')${NC}"
+    fi
+
+    echo -e "${YELLOW}→ [2/4] Stopping and removing container...${NC}"
+    $DOCKER_COMPOSE_CMD stop "$service" 2>/dev/null
+    $DOCKER_COMPOSE_CMD rm -f "$service" 2>/dev/null
+    echo -e "${GREEN}✓ Container removed${NC}"
+
+    echo -e "${YELLOW}→ [3/4] Removing data volume(s)...${NC}"
+    if [ -n "$volumes" ]; then
+        while IFS= read -r vol; do
+            [ -n "$vol" ] && docker volume rm "$vol" 2>/dev/null
+        done <<< "$volumes"
+    fi
+    echo -e "${GREEN}✓ Volume(s) removed${NC}"
+
+    echo -e "${YELLOW}→ [4/4] Starting $service fresh...${NC}"
+    $DOCKER_COMPOSE_CMD up -d "$service"
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}✗ Failed to start $service${NC}"
+        exit 1
+    fi
+    echo -e "${GREEN}✓ $service started${NC}"
+}
+
+# Reset one or more infra services (postgres, kafka, or the "infra" shortcut for both)
+reset_service() {
+    local service=$1
+
+    case "$service" in
+        infra)
+            confirm_reset "This wipes ALL data in Postgres (every service's DB) and Kafka (all topics/messages)."
+            reset_one_service "postgres"
+            reset_one_service "kafka"
+            echo -e "${YELLOW}→ Recreating Kafka topics (waits for Kafka to report healthy)...${NC}"
+            $DOCKER_COMPOSE_CMD up -d kafka-init
+            ;;
+        postgres)
+            confirm_reset "This wipes ALL data in Postgres, including every microservice's database."
+            reset_one_service "postgres"
+            ;;
+        kafka)
+            confirm_reset "This wipes all Kafka topics and messages (consumer offsets included)."
+            reset_one_service "kafka"
+            echo -e "${YELLOW}→ Recreating Kafka topics (waits for Kafka to report healthy)...${NC}"
+            $DOCKER_COMPOSE_CMD up -d kafka-init
+            ;;
+        *)
+            confirm_reset "This wipes $service's data volume, if it has one."
+            reset_one_service "$service"
+            ;;
+    esac
+
+    echo ""
+    echo -e "${GREEN}========================================${NC}"
+    echo -e "${GREEN}✓ Reset complete${NC}"
+    echo -e "${GREEN}========================================${NC}"
+    echo ""
+    echo -e "${YELLOW}Note: microservices connected to what you just reset (DB connections, Kafka${NC}"
+    echo -e "${YELLOW}consumer groups) may need a restart to pick up a clean state:${NC}"
+    echo "  ./service.sh restart <service>"
+}
+
 # View logs
 view_logs() {
     local service=$1
@@ -309,6 +408,13 @@ fi
 SERVICE_INPUT=$2
 SERVICE=$(get_service_name "$SERVICE_INPUT")
 
+SKIP_CONFIRM=0
+for arg in "${@:3}"; do
+    if [ "$arg" == "-y" ] || [ "$arg" == "--yes" ]; then
+        SKIP_CONFIRM=1
+    fi
+done
+
 check_docker_compose
 
 case $COMMAND in
@@ -323,6 +429,9 @@ case $COMMAND in
         ;;
     start)
         start_service "$SERVICE"
+        ;;
+    reset)
+        reset_service "$SERVICE"
         ;;
     logs)
         view_logs "$SERVICE"
