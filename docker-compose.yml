@@ -191,6 +191,12 @@ services:
       - "9100:9100"
     networks:
       - ecommerce-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9100/actuator/health/readiness || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
     restart: on-failure
 
   # Product Storage Service (Port 9200)
@@ -204,7 +210,7 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
-      identity-service:
+      back-office-service:
         condition: service_healthy
     environment:
       # Database
@@ -231,6 +237,12 @@ services:
       - "9200:9200"
     networks:
       - ecommerce-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9200/actuator/health/readiness || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
     restart: on-failure
 
   # Ecommerce Service (Port 9300)
@@ -244,10 +256,8 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
-      identity-service:
-        condition: service_healthy
       product-storage-service:
-        condition: service_started
+        condition: service_healthy
     environment:
       # Database
       DB_HOST: postgres
@@ -274,6 +284,12 @@ services:
       - "9300:9300"
     networks:
       - ecommerce-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9300/actuator/health/readiness || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
     restart: on-failure
 
   # ==================== SEARCH & CHAT ====================
