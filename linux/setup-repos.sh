@@ -23,6 +23,9 @@ FRONTEND_REPO_1="git@github.com:HK251-DATN/FE-prototype.git"
 FRONTEND_REPO_2="git@github.com:HK251-DATN/back-office-ui.git"
 FRONTEND_REPO_3="git@github.com:HK251-DATN/provider-ui.git"
 
+# Tools (1 repository)
+SCENARIO_SEEDER_TOOL_REPO="git@github.com:HK251-DATN/tools-scenario-seeder.git"
+
 # =============================================================================
 
 # Colors for output
@@ -73,12 +76,13 @@ echo "Creating directory structure..."
 mkdir -p services
 mkdir -p infrastructure
 mkdir -p frontend
+mkdir -p tools
 echo -e "${GREEN}✓ Directories created${NC}"
 echo ""
 
 # Clone services
 echo "=========================================="
-echo "Cloning Service Repositories (5/11)"
+echo "Cloning Service Repositories (5/12)"
 echo "=========================================="
 clone_repo "$IDENTITY_SERVICE_REPO" "services/identity-service" "identity-service"
 clone_repo "$BACK_OFFICE_SERVICE_REPO" "services/back-office-service" "back-office-service"
@@ -88,7 +92,7 @@ clone_repo "$SEARCH_CHAT_SERVICE_REPO" "services/search-chat-service" "search-ch
 
 # Clone infrastructure
 echo "=========================================="
-echo "Cloning Infrastructure Repositories (3/11)"
+echo "Cloning Infrastructure Repositories (3/12)"
 echo "=========================================="
 clone_repo "$DATABASE_INFRA_REPO" "infrastructure/database" "database-infrastructure"
 clone_repo "$KAFKA_INFRA_REPO" "infrastructure/kafka" "kafka-infrastructure"
@@ -96,11 +100,17 @@ clone_repo "$PGADMIN_INFRA_REPO" "infrastructure/pgadmin" "pgadmin-infrastructur
 
 # Clone frontend
 echo "=========================================="
-echo "Cloning Frontend Repositories (3/11)"
+echo "Cloning Frontend Repositories (3/12)"
 echo "=========================================="
 clone_repo "$FRONTEND_REPO_1" "frontend/ecommerce-ui" "ecommerce-ui"
 clone_repo "$FRONTEND_REPO_2" "frontend/back-office-ui" "back-office-ui"
 clone_repo "$FRONTEND_REPO_3" "frontend/provider-ui" "provider-ui"
+
+# Clone tools
+echo "=========================================="
+echo "Cloning Tools Repositories (1/12)"
+echo "=========================================="
+clone_repo "$SCENARIO_SEEDER_TOOL_REPO" "tools/scenario-seeder" "scenario-seeder"
 
 echo "=========================================="
 echo "Setup Complete!"

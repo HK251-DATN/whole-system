@@ -4,6 +4,7 @@
 services/
 infrastructure/
 frontend/
+tools/
 
 # ==================== SENSITIVE FILES ====================
 # Environment variables and secrets
