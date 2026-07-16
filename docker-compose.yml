@@ -352,6 +352,35 @@ services:
       - ecommerce-network
     restart: on-failure
 
+  # ==================== TOOLS (ON-DEMAND) ====================
+
+  # Scenario Seeder — drives real REST APIs to seed narrative, multi-actor
+  # business flows. Not started by a plain `docker compose up` (gated behind
+  # the "seed" profile); runs once and exits (no restart policy) instead of
+  # staying up like the long-running services above. Invoke explicitly, e.g.:
+  #   docker compose --profile seed run --rm scenario-seeder provider-certificate
+  scenario-seeder:
+    build: ./tools/scenario-seeder
+    container_name: ecommerce_scenario_seeder
+    profiles:
+      - seed
+    depends_on:
+      identity-service:
+        condition: service_healthy
+      back-office-service:
+        condition: service_healthy
+    environment:
+      IDENTITY_HOST: identity-service
+      IDENTITY_PORT: 9000
+      BACK_OFFICE_HOST: back-office-service
+      BACK_OFFICE_PORT: 9100
+      PRODUCT_STORAGE_HOST: product-storage-service
+      PRODUCT_STORAGE_PORT: 9200
+      ECOMMERCE_HOST: ecommerce-service
+      ECOMMERCE_PORT: 9300
+    networks:
+      - ecommerce-network
+
   # ==================== FRONTEND APPLICATIONS ====================
 
   # Ecommerce UI (Port 3000)
