@@ -25,6 +25,7 @@ build/
 dist/
 out/
 *.class
+node_modules/
 
 # Logs
 *.log

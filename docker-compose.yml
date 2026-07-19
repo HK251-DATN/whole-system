@@ -360,7 +360,9 @@ services:
   # staying up like the long-running services above. Invoke explicitly, e.g.:
   #   docker compose --profile seed run --rm scenario-seeder provider-certificate
   scenario-seeder:
-    build: ./tools/scenario-seeder
+    build:
+      context: .
+      dockerfile: tools/scenario-seeder/Dockerfile
     container_name: ecommerce_scenario_seeder
     profiles:
       - seed
@@ -378,6 +380,7 @@ services:
       PRODUCT_STORAGE_PORT: 9200
       ECOMMERCE_HOST: ecommerce-service
       ECOMMERCE_PORT: 9300
+      IDENTITY_INIT_DATA_PATH: /app/seed-data/identity-service/init_data.json
     networks:
       - ecommerce-network
 
