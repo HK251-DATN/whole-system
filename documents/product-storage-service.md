@@ -1054,9 +1054,13 @@ Phân loại nông sản tươi sống của Việt Nam:
 
 3 biến thể cho mỗi SubSubcategory (ví dụ: Thịt Heo Vai, Thịt Heo Ba Chỉ, Thịt Heo Sườn).
 
-#### 10.2.6 ProductBatch (35 lô hàng)
+#### 10.2.6 ProductBatch (không seed)
 
-35 lô hàng mẫu với trạng thái `PENDING`, số lượng 20–200 kg.
+Không seed sẵn `ProductBatch` nào — một lô hàng luôn cần một nhà cung cấp thật
+đứng sau nó (`providerId` cho lô CERTIFICATE, hoặc các `ProductSubBatch` thật
+cho lô VIDEO), mà nhà cung cấp chỉ tồn tại cục bộ sau khi đã trải qua quy trình
+xác minh thật (xem kịch bản `provider-certificate`/`provider-video` và
+`batch-to-detail` trong `tools/scenario-seeder`).
 
 ### 10.3 Thông Tin Đăng Nhập Mặc Định
 
