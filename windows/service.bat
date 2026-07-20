@@ -34,7 +34,7 @@ REM Detect docker-compose or docker compose
 call :check_docker_compose
 
 REM Execute command
-if "%COMMAND%"=="rebuild" goto :rebuild_service
+if "%COMMAND%"=="rebuild" goto :rebuild_multi
 if "%COMMAND%"=="restart" goto :restart_service
 if "%COMMAND%"=="stop" goto :stop_service
 if "%COMMAND%"=="start" goto :start_service
@@ -79,6 +79,7 @@ echo   infra            - postgres + kafka together (reset only)
 echo.
 echo Examples:
 echo   service.bat rebuild identity          # Rebuild identity service after code changes
+echo   service.bat rebuild identity back-office product-storage ecommerce  # Rebuild several services
 echo   service.bat restart product-storage   # Restart product storage service
 echo   service.bat logs ecommerce            # View ecommerce service logs
 echo   service.bat stop back-office          # Stop back office service
@@ -124,7 +125,22 @@ REM Neither command found
 echo [ERROR] docker-compose is not installed
 exit /b 1
 
-:rebuild_service
+:rebuild_multi
+REM rebuild accepts one or more service names, e.g. "rebuild identity ecommerce"
+shift
+:rebuild_multi_loop
+if "%~1"=="" exit /b
+if /I "%~1"=="-y" goto :rebuild_multi_skip
+if /I "%~1"=="--yes" goto :rebuild_multi_skip
+call :map_service_name "%~1"
+set SERVICE_INPUT=%~1
+call :do_rebuild
+if %errorlevel% neq 0 exit /b %errorlevel%
+:rebuild_multi_skip
+shift
+goto :rebuild_multi_loop
+
+:do_rebuild
 REM Check if service is a microservice
 set IS_MICROSERVICE=0
 if "%SERVICE%"=="identity-service" set IS_MICROSERVICE=1& set SERVICE_DIR=services\identity-service

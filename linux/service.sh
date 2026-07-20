@@ -74,6 +74,7 @@ show_usage() {
     echo ""
     echo -e "${BLUE}Examples:${NC}"
     echo "  ./service.sh rebuild identity          # Rebuild identity service after code changes"
+    echo "  ./service.sh rebuild identity back-office product-storage ecommerce  # Rebuild several services"
     echo "  ./service.sh restart product-storage   # Restart product storage service"
     echo "  ./service.sh logs ecommerce            # View ecommerce service logs"
     echo "  ./service.sh stop back-office          # Stop back office service"
@@ -388,6 +389,17 @@ if [ $# -lt 2 ]; then
     exit 1
 fi
 
+check_docker_compose
+
+# rebuild accepts one or more service names, e.g. `rebuild identity ecommerce`
+if [ "$COMMAND" == "rebuild" ]; then
+    for SERVICE_INPUT in "${@:2}"; do
+        SERVICE=$(get_service_name "$SERVICE_INPUT")
+        rebuild_service "$SERVICE"
+    done
+    exit 0
+fi
+
 SERVICE_INPUT=$2
 SERVICE=$(get_service_name "$SERVICE_INPUT")
 
@@ -398,12 +410,7 @@ for arg in "${@:3}"; do
     fi
 done
 
-check_docker_compose
-
 case $COMMAND in
-    rebuild)
-        rebuild_service "$SERVICE"
-        ;;
     restart)
         restart_service "$SERVICE"
         ;;
