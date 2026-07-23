@@ -30,35 +30,56 @@ cd project-root
 windows/setup-repos.bat   # Windows
 
 # This will create and populate:
-#   - services/ (4 microservice repos)
-#   - infrastructure/ (2 infrastructure repos)
-#   - frontend/ (2 frontend repos)
+#   - services/ (5 microservice repos)
+#   - infrastructure/ (3 infrastructure repos)
+#   - frontend/ (3 frontend repos)
+#   - tools/ (1 on-demand tool: scenario-seeder)
 ```
 
-### Start Everything with Docker
+### Start Everything (One Command)
 
 ```bash
 # 1. Configure environment
 cp .env.example .env
 # Edit .env and add your Cloudflare R2 credentials
 
-# 2. Build JARs locally (avoids Docker network issues)
-./linux/build-local.sh    # Linux/Mac
-windows/build-local.bat   # Windows
-
-# 3. Start all services
-./linux/start.sh          # Linux/Mac
-windows/start.bat         # Windows
+# 2. Build, start, and seed everything in one shot
+./linux/start-all.sh          # Linux/Mac
+windows\start-all.bat         # Windows
 ```
+
+This builds the service JARs, brings up every backend container via Docker
+Compose, and seeds scenario data. Add `--enable-front-end` to also build and
+start the frontend UIs as containers. See **[START_ALL.md](START_ALL.md)** for
+the full list of flags and scenarios (fresh restarts, skipping steps, etc).
 
 That's it! All services will be available at:
 - **Identity Service**: http://localhost:9000
 - **Back-Office Service**: http://localhost:9100
 - **Product Storage Service**: http://localhost:9200
-- **Ecommerce Service**: http://localhost:9301
+- **Ecommerce Service**: http://localhost:9300
+- **Search & Chat Service**: http://localhost:9400
 - **Kafka UI**: http://localhost:9280
 
 📖 **Full Docker guide:** See [DOCKER_SETUP.md](DOCKER_SETUP.md)
+
+<details>
+<summary>Manual, step-by-step alternative</summary>
+
+```bash
+# 1. Build JARs locally (avoids Docker network issues)
+./linux/build-local.sh    # Linux/Mac
+windows/build-local.bat   # Windows
+
+# 2. Start all services
+./linux/start.sh          # Linux/Mac
+windows/start.bat         # Windows
+
+# 3. Seed scenario data (start-all.sh does this automatically)
+docker compose --profile seed run --rm scenario-seeder all
+```
+
+</details>
 
 ## 📋 Architecture
 
@@ -110,18 +131,24 @@ ecommerce-microservices-platform/
 │   └── kafka/                    # Kafka + Kafka UI
 ├── frontend/                     # Created by setup-repos.sh
 │   ├── ecommerce-ui/             # Customer-facing e-commerce app
-│   └── back-office-ui/           # Admin/back-office interface
+│   ├── back-office-ui/           # Admin/back-office interface
+│   └── provider-ui/              # Provider/supplier portal
+├── tools/                        # Created by setup-repos.sh
+│   └── scenario-seeder/          # On-demand scenario data seeder
 ├── docker-compose.yml            # Main orchestration
 ├── linux/                        # Linux/Mac scripts
 │   ├── setup-repos.sh            # First-time repository setup
 │   ├── service.sh                # Individual service management
 │   ├── build-local.sh            # Local JAR build
-│   └── start.sh                  # Startup script
+│   ├── start.sh                  # Startup script
+│   └── start-all.sh              # One-shot: build + start + seed (+ frontend)
 ├── windows/                      # Windows scripts
 │   ├── setup-repos.bat           # First-time repository setup
 │   ├── service.bat               # Individual service management
 │   ├── build-local.bat           # Local JAR build
-│   └── start.bat                 # Startup script
+│   ├── start.bat                 # Startup script
+│   └── start-all.bat             # One-shot: build + start + seed (+ frontend)
+├── START_ALL.md                  # Quick-reference for start-all scripts
 └── .env.example                  # Environment template
 ```
 
@@ -345,6 +372,7 @@ docker-compose exec identity-service ./mvnw test
 
 ## 📚 Documentation
 
+- **[START_ALL.md](START_ALL.md)** - Quick reference for `start-all.sh` / `start-all.bat` flags and scenarios
 - **[CLAUDE.md](CLAUDE.md)** - Detailed architecture and development guide for Claude Code
 - **[DOCKER_SETUP.md](DOCKER_SETUP.md)** - Complete Docker setup and troubleshooting
 - **Service-specific docs:**

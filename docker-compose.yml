@@ -384,41 +384,76 @@ services:
     networks:
       - ecommerce-network
 
-  # ==================== FRONTEND APPLICATIONS ====================
+  # ==================== FRONTEND APPLICATIONS (ON-DEMAND) ====================
+
+  # Static-build frontend containers. Not started by a plain `docker compose
+  # up` (gated behind the "frontend" profile) since local `npm run dev` is the
+  # normal dev workflow. Bring these up with:
+  #   docker compose --profile frontend up -d --build
+  # or: ./linux/start-all.sh --enable-front-end
+  #
+  # Each UI's backend URLs are baked in at build time (default to
+  # http://localhost:<port>, matching the ports published above), so the
+  # browser talks to the backends directly regardless of which container
+  # served the SPA. That means the backend services' CORS allow-list (see
+  # each service's WebConfig.java) must include the UI's published origin.
 
   # Ecommerce UI (Port 3000)
-  # ecommerce-ui:
-  #   build:
-  #     context: ./frontend/ecommerce-ui
-  #     dockerfile: Dockerfile
-  #   container_name: ecommerce-ui
-  #   depends_on:
-  #     - identity-service
-  #     - back-office-service
-  #     - product-storage-service
-  #     - ecommerce-service
-  #   ports:
-  #     - "3000:80"
-  #   networks:
-  #     - ecommerce-network
-  #   restart: unless-stopped
+  ecommerce-ui:
+    build:
+      context: ./frontend/ecommerce-ui
+      dockerfile: Dockerfile
+    container_name: ecommerce-ui
+    profiles:
+      - frontend
+    depends_on:
+      - identity-service
+      - back-office-service
+      - product-storage-service
+      - ecommerce-service
+    ports:
+      - "3000:80"
+    networks:
+      - ecommerce-network
+    restart: unless-stopped
 
-  # # Back-Office UI (Port 5173)
-  # back-office-ui:
-  #   build:
-  #     context: ./frontend/back-office-ui
-  #     dockerfile: Dockerfile
-  #   container_name: back-office-ui
-  #   depends_on:
-  #     - identity-service
-  #     - back-office-service
-  #     - product-storage-service
-  #     - ecommerce-service
-  #   ports:
-  #     - "5173:80"
-  #   networks:
-  #     - ecommerce-network
-  #   restart: unless-stopped
+  # Back-Office UI (Port 5173)
+  back-office-ui:
+    build:
+      context: ./frontend/back-office-ui
+      dockerfile: Dockerfile
+    container_name: back-office-ui
+    profiles:
+      - frontend
+    depends_on:
+      - identity-service
+      - back-office-service
+      - product-storage-service
+      - ecommerce-service
+    ports:
+      - "5173:80"
+    networks:
+      - ecommerce-network
+    restart: unless-stopped
+
+  # Provider UI (Port 5273)
+  provider-ui:
+    build:
+      context: ./frontend/provider-ui
+      dockerfile: Dockerfile
+    container_name: provider-ui
+    profiles:
+      - frontend
+    depends_on:
+      - identity-service
+      - back-office-service
+      - product-storage-service
+      - ecommerce-service
+    ports:
+      - "5273:80"
+    networks:
+      - ecommerce-network
+    restart: unless-stopped
 
 # ==================== NETWORKS & VOLUMES ====================
 
