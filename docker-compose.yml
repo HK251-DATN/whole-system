@@ -292,12 +292,19 @@ services:
       start_period: 30s
     restart: on-failure
 
-  # ==================== SEARCH & CHAT ====================
+  # ==================== SEARCH & CHAT (ON-DEMAND) ====================
+
+  # Not started by a plain `docker compose up` (gated behind the "search"
+  # profile) since only identity/back-office/product-storage/ecommerce are
+  # needed for the core system. Bring these up with:
+  #   docker compose --profile search up -d --build
 
   # Elasticsearch - for search-chat-service
   elasticsearch:
     image: elasticsearch:8.13.0
     container_name: ecommerce_elasticsearch
+    profiles:
+      - search
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
@@ -321,6 +328,8 @@ services:
   search-chat-service:
     build: ./services/search-chat-service
     container_name: search-chat-service
+    profiles:
+      - search
     environment:
       - ELASTICSEARCH_HOST=http://elasticsearch:9200
       - ELASTICSEARCH_USER=
