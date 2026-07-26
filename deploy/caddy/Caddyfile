@@ -1,0 +1,31 @@
+# Reverse proxy for the core backend services, fronting them on :80.
+#
+# No domain yet, so this listens on the bare port (`:80`) which Caddy treats
+# as HTTP-only and never attempts ACME/TLS for. Once you point a domain at
+# the VM's static IP, switch the address block below to the domain name
+# (e.g. `api.example.com {`) and Caddy will automatically obtain and renew a
+# Let's Encrypt certificate on :443 — no other config changes needed.
+#
+# Routing is path-prefixed; handle_path strips the matched prefix before
+# proxying, and none of the 4 services define a server.context-path, so
+# POST /identity/api/user/login -> identity-service receives POST /api/user/login.
+
+:80 {
+	handle_path /identity/* {
+		reverse_proxy identity-service:9000
+	}
+
+	handle_path /back-office/* {
+		reverse_proxy back-office-service:9100
+	}
+
+	handle_path /product-storage/* {
+		reverse_proxy product-storage-service:9200
+	}
+
+	handle_path /ecommerce/* {
+		reverse_proxy ecommerce-service:9300
+	}
+
+	respond /health 200
+}

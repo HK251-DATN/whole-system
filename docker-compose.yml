@@ -28,6 +28,8 @@ services:
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: ecommerce_pgadmin
+    profiles:
+      - infra-management
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@ecommerce.local}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
@@ -98,6 +100,8 @@ services:
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: ecommerce_kafka_ui
+    profiles:
+      - infra-management
     ports:
       - "9280:8080"
     environment:

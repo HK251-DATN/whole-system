@@ -1,0 +1,72 @@
+version: "3.9"
+
+# Production override for GCP VM deployment. Run from the repo root together
+# with the base file:
+#   docker compose -f docker-compose.yml -f deploy/gcp/compose.prod.yml up -d --build
+#
+# What this changes vs. the base compose file:
+# - Builds services from the plain `Dockerfile` (self-contained multi-stage
+#   Maven build) instead of `Dockerfile.local` (which needs a pre-built JAR,
+#   i.e. a JDK/Maven toolchain on the host). The VM only needs Docker.
+# - Caps JVM/Kafka heap sizes. Nothing in the base file bounds them, so on a
+#   shared host each JVM defaults to ~25% of total host memory — four
+#   services unbounded can starve Kafka/Postgres. See deploy/gcp/README.md.
+# - Adds a Caddy reverse proxy (see deploy/caddy/Caddyfile).
+#
+# Relative paths below (e.g. ./deploy/caddy/Caddyfile) are resolved relative
+# to the repo root — Compose anchors relative paths to the directory of the
+# *first* -f file (docker-compose.yml), not this file's own directory.
+
+services:
+  identity-service:
+    build:
+      dockerfile: Dockerfile
+    environment:
+      JAVA_TOOL_OPTIONS: "-Xms256m -Xmx768m"
+
+  back-office-service:
+    build:
+      dockerfile: Dockerfile
+    environment:
+      JAVA_TOOL_OPTIONS: "-Xms256m -Xmx768m"
+
+  product-storage-service:
+    build:
+      dockerfile: Dockerfile
+    environment:
+      JAVA_TOOL_OPTIONS: "-Xms256m -Xmx768m"
+
+  ecommerce-service:
+    build:
+      dockerfile: Dockerfile
+    environment:
+      JAVA_TOOL_OPTIONS: "-Xms256m -Xmx768m"
+
+  kafka:
+    environment:
+      KAFKA_HEAP_OPTS: "-Xms512m -Xmx1g"
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: ecommerce_caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - ecommerce-network
+    depends_on:
+      - identity-service
+      - back-office-service
+      - product-storage-service
+      - ecommerce-service
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+    driver: local
+  caddy_config:
+    driver: local
