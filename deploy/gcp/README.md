@@ -50,11 +50,25 @@ onto the VM).
 
 ## 1. Docker / Docker Compose
 
-Handled by step 0's startup script. To verify (on the VM):
+Installed by step 0's startup script. To verify (on the VM):
 
 ```bash
 docker --version && docker compose version
 ```
+
+Docker itself being installed doesn't mean your SSH user can run it yet —
+that needs one-time group membership, done from your own account (on the
+VM):
+
+```bash
+sudo usermod -aG docker $USER
+newgrp docker
+```
+
+Without this, `docker compose` commands fail with `permission denied while
+trying to connect to the docker API at unix:///var/run/docker.sock`.
+`newgrp docker` applies it to your current session immediately; a fresh SSH
+login would also pick it up, but doesn't require one.
 
 ## 2. Get the code onto the VM
 
@@ -111,9 +125,13 @@ reach them by SSH tunnel rather than opening their ports to the internet:
 docker compose --profile infra-management up -d pgadmin kafka-ui
 ```
 ```bash
-# from your own machine
+# from your own machine — repeat --ssh-flag per -L, packing both into one
+# flag value doesn't reliably split. If this hangs or the forward silently
+# doesn't apply, you likely have another gcloud ssh session already open to
+# this VM (it reuses a multiplexed connection); close it and retry, or add
+# --ssh-flag="-o ControlMaster=no" --ssh-flag="-o ControlPath=none".
 gcloud compute ssh ecommerce-backend --zone=asia-southeast1-c --project=ecommerce-system-503610 \
-  --ssh-flag="-L 5480:localhost:5480 -L 9280:localhost:9280"
+  --ssh-flag="-L 5480:localhost:5480" --ssh-flag="-L 9280:localhost:9280"
 # then open http://localhost:5480 (pgAdmin) / http://localhost:9280 (Kafka UI) locally
 ```
 

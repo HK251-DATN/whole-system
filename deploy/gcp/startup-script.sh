@@ -10,6 +10,16 @@ set -euo pipefail
 # are idempotent.
 # =============================================================================
 
+# Runs on every boot, ahead of the early-exit below, so it still applies
+# after Docker's already installed (a reboot on this VM would otherwise skip
+# straight past everything else in this file). Hardcoded to this one account
+# since this VM is only ever SSHed into by khoitrananh. `|| true` matters: on
+# a from-scratch VM this runs before GCE has lazily created the account
+# (that happens on first SSH login), so usermod would otherwise fail here
+# and — with set -e above — abort the rest of this script.
+usermod -aG docker khoitrananh    || true
+usermod -aG docker trananhkhoitv  || true
+
 if command -v docker &> /dev/null; then
   echo "Docker already installed, skipping."
   exit 0
@@ -30,8 +40,11 @@ echo \
 apt-get update
 apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-# Let the default GCE user run docker without sudo.
-usermod -aG docker "$(logname 2>/dev/null || echo ubuntu)" || true
+# Not adding any user to the `docker` group here: this script runs as root
+# at boot time, before GCE has created an account for whoever SSHes in later
+# (that account's name depends on your Google identity / OS Login config,
+# and isn't knowable in advance). Run this once after your first SSH login
+# instead: `sudo usermod -aG docker $USER && newgrp docker`.
 
 systemctl enable docker
 systemctl start docker
