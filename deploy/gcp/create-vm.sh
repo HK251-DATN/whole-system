@@ -79,12 +79,30 @@ gcloud compute firewall-rules create "${VM_NAME}-allow-postgres" \
   --target-tags="$NETWORK_TAG" \
   --source-ranges=0.0.0.0/0 || echo "  (already exists, skipping)"
 
+# pgAdmin still needs `docker compose --profile infra-management up -d
+# pgadmin` to actually be running (see deploy/gcp/README.md) — this rule
+# just opens the port.
+#
+# SECURITY: pgAdmin's default login is admin@ecommerce.local / admin
+# (PGADMIN_DEFAULT_EMAIL/PGADMIN_DEFAULT_PASSWORD fallbacks in
+# docker-compose.yml) and it's a full DB browser/query tool. Change
+# PGADMIN_PASSWORD in .env before relying on this being open to
+# 0.0.0.0/0, or narrow --source-ranges to your own IP instead.
+echo "==> Creating firewall rule: allow pgAdmin (5480)"
+gcloud compute firewall-rules create "${VM_NAME}-allow-pgadmin" \
+  --project="$PROJECT_ID" \
+  --network=default \
+  --direction=INGRESS \
+  --action=ALLOW \
+  --rules=tcp:5480 \
+  --target-tags="$NETWORK_TAG" \
+  --source-ranges=0.0.0.0/0 || echo "  (already exists, skipping)"
+
 # Kafka (9092) is still deliberately NOT opened — reachable only from inside
-# the VM. Kafka UI and pgAdmin don't even start by default (they're behind
-# the "infra-management" compose profile); bring them up with
-# `docker compose --profile infra-management up -d` and reach them via
-# `gcloud compute ssh --ssh-flag="-L 5480:localhost:5480 -L 9280:localhost:9280"`
-# tunneling rather than opening their ports to the internet.
+# the VM. Kafka UI still isn't either — bring it up with
+# `docker compose --profile infra-management up -d kafka-ui` and reach it via
+# `gcloud compute ssh --ssh-flag="-L 9280:localhost:9280"` tunneling instead
+# of opening its port to the internet.
 
 echo "==> Creating VM: $VM_NAME"
 gcloud compute instances create "$VM_NAME" \

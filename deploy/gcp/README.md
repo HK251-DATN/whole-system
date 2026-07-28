@@ -22,14 +22,19 @@ gcloud auth login   # if not already
 ```
 
 This reserves a static IP, opens firewall ports (22, 80, 443, 9000, 9100,
-9200, 9300, 5432 — **not** 9092, which stays internal-only), and creates the
-VM with `deploy/gcp/startup-script.sh` wired up as its boot startup script,
-so Docker installs itself automatically (~1-2 min after first boot).
+9200, 9300, 5432, 5480 — **not** 9092/9280, which stay internal-only), and
+creates the VM with `deploy/gcp/startup-script.sh` wired up as its boot
+startup script, so Docker installs itself automatically (~1-2 min after
+first boot).
 
-pgAdmin and Kafka UI don't start with a plain `docker compose up` at all —
-they're behind the `infra-management` profile (see step 3) — so there's no
-firewall rule for their ports (5480/9280) either. Reach them via SSH
-tunneling if you bring them up, not by opening them to the internet.
+pgAdmin (5480) is open to the internet — it still doesn't start with a plain
+`docker compose up` (behind the `infra-management` profile, see step 3), but
+once you bring it up it's reachable at `http://<STATIC_IP>:5480` from
+anywhere. Its default login is `admin@ecommerce.local` / `admin`
+(`PGADMIN_DEFAULT_EMAIL`/`PGADMIN_DEFAULT_PASSWORD` in `docker-compose.yml`)
+— change `PGADMIN_PASSWORD` in `.env` before relying on this, since it's a
+full database browser/query tool. Kafka UI (9280) is not opened — reach it
+via SSH tunneling instead if you bring it up (see step 3).
 
 Postgres (5432) being open to the internet means whatever's in `DB_USERNAME`
 / `DB_PASSWORD` in your `.env` is your only line of defense — change them
@@ -118,12 +123,15 @@ Caddy reverse proxy. No `--profile` flag means search/frontend/seed/
 infra-management stay off — that's Postgres, Kafka, and the 4 core services
 only.
 
-Need pgAdmin or Kafka UI (e.g. to inspect data)? Bring them up separately and
-reach them by SSH tunnel rather than opening their ports to the internet:
+Need pgAdmin or Kafka UI (e.g. to inspect data)? Bring them up separately:
 
 ```bash
 docker compose --profile infra-management up -d pgadmin kafka-ui
 ```
+
+pgAdmin is open to the internet (see step 0's security note) — just visit
+`http://<STATIC_IP>:5480`. Kafka UI isn't opened, so reach it by SSH tunnel:
+
 ```bash
 # from your own machine — repeat --ssh-flag per -L, packing both into one
 # flag value doesn't reliably split. If this hangs or the forward silently
@@ -131,8 +139,8 @@ docker compose --profile infra-management up -d pgadmin kafka-ui
 # this VM (it reuses a multiplexed connection); close it and retry, or add
 # --ssh-flag="-o ControlMaster=no" --ssh-flag="-o ControlPath=none".
 gcloud compute ssh ecommerce-backend --zone=asia-southeast1-c --project=ecommerce-system-503610 \
-  --ssh-flag="-L 5480:localhost:5480" --ssh-flag="-L 9280:localhost:9280"
-# then open http://localhost:5480 (pgAdmin) / http://localhost:9280 (Kafka UI) locally
+  --ssh-flag="-L 9280:localhost:9280"
+# then open http://localhost:9280 (Kafka UI) locally
 ```
 
 Check health:
@@ -181,5 +189,5 @@ docker compose -f docker-compose.yml -f deploy/gcp/compose.prod.yml up -d --buil
 ```bash
 gcloud compute instances delete ecommerce-backend --zone=asia-southeast1-c --project=ecommerce-system-503610
 gcloud compute addresses delete ecommerce-backend-ip --region=asia-southeast1 --project=ecommerce-system-503610
-gcloud compute firewall-rules delete ecommerce-backend-allow-ssh ecommerce-backend-allow-http-https ecommerce-backend-allow-core-services ecommerce-backend-allow-postgres --project=ecommerce-system-503610
+gcloud compute firewall-rules delete ecommerce-backend-allow-ssh ecommerce-backend-allow-http-https ecommerce-backend-allow-core-services ecommerce-backend-allow-postgres ecommerce-backend-allow-pgadmin --project=ecommerce-system-503610
 ```
