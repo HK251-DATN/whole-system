@@ -9,22 +9,35 @@
 # Routing is path-prefixed; handle_path strips the matched prefix before
 # proxying, and none of the 4 services define a server.context-path, so
 # POST /identity/api/user/login -> identity-service receives POST /api/user/login.
+#
+# Each service also has server.forward-headers-strategy: framework set, so it
+# reads the X-Forwarded-Prefix header below and rewrites its generated Swagger
+# UI / OpenAPI asset URLs to include the prefix (e.g. /identity/v3/api-docs)
+# instead of resolving them against the bare host root.
 
 :80 {
 	handle_path /identity/* {
-		reverse_proxy identity-service:9000
+		reverse_proxy identity-service:9000 {
+			header_up X-Forwarded-Prefix /identity
+		}
 	}
 
 	handle_path /back-office/* {
-		reverse_proxy back-office-service:9100
+		reverse_proxy back-office-service:9100 {
+			header_up X-Forwarded-Prefix /back-office
+		}
 	}
 
 	handle_path /product-storage/* {
-		reverse_proxy product-storage-service:9200
+		reverse_proxy product-storage-service:9200 {
+			header_up X-Forwarded-Prefix /product-storage
+		}
 	}
 
 	handle_path /ecommerce/* {
-		reverse_proxy ecommerce-service:9300
+		reverse_proxy ecommerce-service:9300 {
+			header_up X-Forwarded-Prefix /ecommerce
+		}
 	}
 
 	respond /health 200
